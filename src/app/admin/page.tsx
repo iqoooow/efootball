@@ -2253,6 +2253,35 @@ export default function AdminPage() {
           border-radius: 999px;
         }
 
+        .admin-empty-pane {
+          text-align: center;
+          padding: 48px 24px;
+          background: rgba(10, 17, 36, 0.85);
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        .empty-pane-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 18px;
+          font-weight: 800;
+          color: #FFF;
+          margin: 0;
+        }
+        .empty-pane-desc {
+          font-size: 13.5px;
+          color: rgba(156, 163, 175, 0.85);
+          margin: 0;
+          max-width: 420px;
+          line-height: 1.5;
+        }
+
         /* Moderation Cards Grid */
         .moderation-cards-grid {
           display: grid;
