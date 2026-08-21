@@ -32,6 +32,16 @@ import {
   ArrowRight,
   ExternalLink,
   MessageSquare,
+  ChevronRight,
+  Menu,
+  SlidersHorizontal,
+  FileText,
+  Activity,
+  Layers,
+  Settings,
+  Store,
+  CreditCard,
+  Zap,
 } from "lucide-react";
 import { isSupabaseConfigured, createClient } from "@/lib/supabase/client";
 import type { Listing, Order, Profile, UserRole } from "@/lib/types";
@@ -56,6 +66,9 @@ export default function AdminPage() {
 
   // Dashboard Data states (100% Dynamic from Supabase)
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const [listings, setListings] = useState<Listing[]>([]);
   const [users, setUsers] = useState<Profile[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -77,17 +90,12 @@ export default function AdminPage() {
 
   // Fetch real data from Supabase (Resilient In-Memory Join)
   const fetchAllData = useCallback(async (sb: any) => {
+    setIsRefreshing(true);
     try {
       const [listingsRes, profilesRes, ordersRes] = await Promise.all([
-        sb
-          .from("listings")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        sb.from("listings").select("*").order("created_at", { ascending: false }),
         sb.from("profiles").select("*").order("created_at", { ascending: false }),
-        sb
-          .from("orders")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        sb.from("orders").select("*").order("created_at", { ascending: false }),
       ]);
 
       const profilesData = profilesRes.data || [];
@@ -114,6 +122,8 @@ export default function AdminPage() {
       setOrders(populatedOrders);
     } catch (err) {
       console.error("Admin fetch error:", err);
+    } finally {
+      setIsRefreshing(false);
     }
   }, []);
 
@@ -220,6 +230,7 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     setUsernameInput("");
     setPasswordInput("");
+    window.location.href = "/";
   };
 
   // Moderation: Approve Listing
@@ -266,20 +277,12 @@ export default function AdminPage() {
   };
 
   // Moderation: Reject Listing
-  const openRejectModal = (listing: Listing) => {
-    setListingToReject(listing);
-    setRejectReasonInput("");
-    setRejectModalOpen(true);
-  };
-
-  const handleConfirmReject = async () => {
+  const handleRejectListing = async () => {
     if (!listingToReject) return;
-    const reason = rejectReasonInput.trim() || "Ma'lumotlar talabga javob bermaydi.";
     setActionProcessing(true);
-
     try {
+      const reason = rejectReasonInput.trim() || "E'lon talablarga javob bermaydi";
       if (sbRef.current) {
-        // Update listing to rejected with reason
         await sbRef.current
           .from("listings")
           .update({ status: "rejected", reject_reason: reason })
@@ -296,6 +299,7 @@ export default function AdminPage() {
 
       setRejectModalOpen(false);
       setListingToReject(null);
+      setRejectReasonInput("");
       setSelectedListing(null);
     } catch (err) {
       console.error("Reject error:", err);
@@ -304,8 +308,8 @@ export default function AdminPage() {
     }
   };
 
-  // User Management: Change Role
-  const handleChangeUserRole = async (userId: string, newRole: UserRole) => {
+  // User Management: Update User Role
+  const handleUpdateUserRole = async (userId: string, newRole: UserRole) => {
     try {
       if (sbRef.current) {
         await sbRef.current
@@ -323,19 +327,22 @@ export default function AdminPage() {
             ? {
                 ...u,
                 role: newRole,
-                seller_status: newRole === "seller" ? "approved" : u.seller_status,
+                seller_status: newRole === "seller" ? "approved" : null,
               }
             : u
         )
       );
     } catch (err) {
-      console.error("Role update error:", err);
+      console.error("Update role error:", err);
     }
   };
 
-  // Listing Management: Toggle Active / Removed
-  const handleToggleListingStatus = async (listingId: string, currentStatus: string) => {
-    const newStatus = currentStatus === "active" ? "removed" : "active";
+  // Listing Management: Toggle Listing Status
+  const handleToggleListingStatus = async (
+    listingId: string,
+    currentStatus: string
+  ) => {
+    const newStatus = currentStatus === "active" ? "rejected" : "active";
     try {
       if (sbRef.current) {
         await sbRef.current
@@ -343,88 +350,78 @@ export default function AdminPage() {
           .update({ status: newStatus })
           .eq("id", listingId);
       }
+
       setListings((prev) =>
         prev.map((l) => (l.id === listingId ? { ...l, status: newStatus as any } : l))
       );
     } catch (err) {
-      console.error("Listing toggle error:", err);
+      console.error("Toggle status error:", err);
     }
   };
 
-  // Statistics Calculation
-  const pendingModerationCount = listings.filter((l) => l.status === "pending_review").length;
-  const activeListingsCount = listings.filter((l) => l.status === "active").length;
-  const totalBuyers = users.filter((u) => u.role === "buyer").length;
-  const totalSellers = users.filter((u) => u.role === "seller").length;
-  const totalCompletedOrders = orders.filter((o) => o.status === "completed").length;
-  const totalPlatformVolume = orders.reduce((sum, o) => sum + (o.price || 0), 0);
-
+  // Loading Screen
   if (authLoading) {
     return (
-      <div className="admin-loading-view">
-        <Loader2 size={38} className="animate-spin text-rose" />
-        <span>Admin xavfsizlik protokoli tekshirilmoqda...</span>
+      <div className="admin-loading-screen">
+        <div className="admin-loading-box">
+          <Loader2 className="animate-spin text-rose" size={40} />
+          <p>Xavfsiz Admin tizimi yuklanmoqda...</p>
+        </div>
       </div>
     );
   }
 
-  // 🔒 AUTHENTICATION LOGIN GATE SCREEN
+  // Login Gate Screen
   if (!isAuthenticated) {
     return (
       <div className="admin-login-screen">
-        <div className="admin-login-card animate-scale-up">
+        <div className="admin-login-card">
           <div className="login-icon-wrap">
-            <ShieldAlert size={36} className="text-rose" />
+            <Lock size={28} className="text-rose" />
           </div>
 
           <div className="login-badge-wrap">
             <span className="admin-security-badge">
-              <Lock size={12} /> Boshqaruv Markazi (RBAC 256-Bit)
+              <ShieldAlert size={12} /> Boshqaruv Markazi
             </span>
           </div>
 
-          <h1 className="login-title">Platforma Admin Paneli</h1>
+          <h1 className="login-title">eFootball Zone Admin</h1>
           <p className="login-desc">
-            Ushbu bo&apos;lim faqat vakolatli ma&apos;murlar uchun himoyalangan. Kirish uchun hisob ma&apos;lumotlarini kiriting.
+            Ushbu panel faqat platforma ma&apos;murlari uchun mo&apos;ljallangan.
           </p>
 
           {loginError && (
             <div className="login-error-alert animate-fade-in">
-              <AlertCircle size={15} style={{ flexShrink: 0 }} />
+              <AlertCircle size={16} />
               <span>{loginError}</span>
             </div>
           )}
 
           <form onSubmit={handleLoginSubmit} className="admin-login-form">
-            <div className="input-group">
-              <label className="input-label" htmlFor="admin-u">
-                Foydalanuvchi nomi yoki Email
-              </label>
+            <div className="form-group">
+              <label className="form-label">Admin Login</label>
               <input
-                id="admin-u"
                 type="text"
                 required
-                autoComplete="username"
-                placeholder="masalan: admin"
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                className="admin-input-field"
+                placeholder="admin"
+                className="admin-input"
+                autoComplete="username"
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label" htmlFor="admin-p">
-                Maxfiy Parol
-              </label>
+            <div className="form-group">
+              <label className="form-label">Xavfsizlik Paroli</label>
               <input
-                id="admin-p"
                 type="password"
                 required
-                autoComplete="current-password"
-                placeholder="••••••••"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                className="admin-input-field"
+                placeholder="••••••••"
+                className="admin-input"
+                autoComplete="current-password"
               />
             </div>
 
@@ -446,21 +443,31 @@ export default function AdminPage() {
           </form>
 
           <div className="login-footer-hint">
-            <span>Demo kirish: <strong>admin</strong> / <strong>admin123</strong></span>
+            <span>Standart kirish: <strong>admin</strong> / <strong>admin123</strong></span>
           </div>
         </div>
 
         <style>{`
-          .admin-login-screen {
+          .admin-loading-screen, .admin-login-screen {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 24px;
             background: radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.08) 0%, transparent 65%), #030712;
+            color: #FFF;
+            font-family: 'Inter', sans-serif;
+          }
+          .admin-loading-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            color: #9CA3AF;
+            font-size: 14px;
           }
           .admin-login-card {
-            background: rgba(10, 16, 32, 0.85);
+            background: rgba(10, 16, 32, 0.9);
             backdrop-filter: blur(32px);
             border: 1px solid rgba(255, 255, 255, 0.09);
             border-radius: 24px;
@@ -471,8 +478,8 @@ export default function AdminPage() {
             box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.8);
           }
           .login-icon-wrap {
-            width: 68px;
-            height: 68px;
+            width: 64px;
+            height: 64px;
             border-radius: 20px;
             background: rgba(244, 63, 94, 0.12);
             border: 1px solid rgba(244, 63, 94, 0.25);
@@ -481,9 +488,7 @@ export default function AdminPage() {
             justify-content: center;
             margin: 0 auto 16px;
           }
-          .login-badge-wrap {
-            margin-bottom: 12px;
-          }
+          .login-badge-wrap { margin-bottom: 12px; }
           .admin-security-badge {
             display: inline-flex;
             align-items: center;
@@ -497,16 +502,15 @@ export default function AdminPage() {
           }
           .login-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 23px;
+            font-size: 22px;
             font-weight: 800;
             color: #FFF;
             margin: 0 0 6px 0;
-            letter-spacing: -0.02em;
           }
           .login-desc {
             font-size: 13px;
             color: rgba(156, 163, 175, 0.85);
-            line-height: 1.55;
+            line-height: 1.5;
             margin: 0 0 24px 0;
           }
           .login-error-alert {
@@ -518,78 +522,71 @@ export default function AdminPage() {
             border: 1px solid rgba(244, 63, 94, 0.3);
             border-radius: 10px;
             color: #FB7185;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12.5px;
+            margin-bottom: 20px;
             text-align: left;
-            margin-bottom: 18px;
           }
           .admin-login-form {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            text-align: left;
           }
-          .input-group {
+          .form-group {
             display: flex;
             flex-direction: column;
-            text-align: left;
             gap: 6px;
           }
-          .input-label {
-            font-size: 12.5px;
+          .form-label {
+            font-size: 12px;
             font-weight: 600;
             color: rgba(209, 213, 219, 0.9);
           }
-          .admin-input-field {
+          .admin-input {
             width: 100%;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 11px;
-            padding: 11px 14px;
+            border-radius: 12px;
+            padding: 12px 14px;
             font-size: 14px;
             color: #FFF;
             outline: none;
             box-sizing: border-box;
             transition: all 0.2s ease;
           }
-          .admin-input-field:focus {
-            border-color: rgba(244, 63, 94, 0.6);
+          .admin-input:focus {
+            border-color: #FB7185;
+            background: rgba(255, 255, 255, 0.07);
             box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
-            background: rgba(244, 63, 94, 0.04);
           }
           .admin-login-submit-btn {
+            margin-top: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            width: 100%;
             padding: 13px 20px;
-            margin-top: 4px;
-            background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
-            color: #FFF;
-            font-size: 14.5px;
-            font-weight: 700;
+            background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%);
             border: none;
             border-radius: 12px;
+            color: #FFF;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(244, 63, 94, 0.4);
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.4);
             transition: all 0.2s ease;
           }
-          .admin-login-submit-btn:hover:not(:disabled) {
-            transform: translateY(-1.5px);
-            box-shadow: 0 8px 26px rgba(244, 63, 94, 0.55);
-          }
-          .admin-login-submit-btn:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
+          .admin-login-submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(225, 29, 72, 0.55);
           }
           .login-footer-hint {
             margin-top: 20px;
             font-size: 12px;
             color: rgba(156, 163, 175, 0.7);
           }
-          .login-footer-hint strong {
-            color: #FFF;
-          }
+          .login-footer-hint strong { color: #FFF; }
+          .text-rose { color: #FB7185; }
         `}</style>
       </div>
     );
@@ -618,355 +615,511 @@ export default function AdminPage() {
 
   // Pending Moderation Listings
   const pendingListings = listings.filter((l) => l.status === "pending_review");
+  const pendingModerationCount = pendingListings.length;
+  const activeListingsCount = listings.filter((l) => l.status === "active").length;
+  const totalVolume = orders
+    .filter((o) => o.status === "completed" || o.status === "confirmed")
+    .reduce((sum, o) => sum + (o.price || 0), 0);
 
   return (
-    <div className="admin-root-layout">
-      {/* Top Admin Header Bar */}
-      <header className="admin-header-nav">
-        <div className="container admin-header-content">
-          <div className="admin-brand-group">
-            <Link href="/" className="admin-back-btn" title="Bosh sahifaga">
-              <ArrowLeft size={16} />
-            </Link>
-            <div className="admin-tag-pill">
-              <ShieldAlert size={14} className="text-rose" />
-              <span>Admin Boshqaruv Markazi</span>
+    <div className="admin-dashboard-container">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="admin-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Modern SaaS Left Sidebar */}
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
+        {/* Brand Header */}
+        <div className="sidebar-brand-box">
+          <div className="brand-icon-pill">
+            <ShieldAlert size={18} className="text-rose" />
+          </div>
+          <div className="brand-info">
+            <span className="brand-title">eFootball Zone</span>
+            <span className="brand-badge">ADMIN SUITE</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="sidebar-close-mobile-btn"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Admin Profile Chip */}
+        <div className="sidebar-admin-chip">
+          <div className="admin-avatar-bubble">A</div>
+          <div className="admin-chip-info">
+            <div className="chip-name">Bosh Ma&apos;mur</div>
+            <div className="chip-status">
+              <span className="status-dot-pulse" /> Onlayn
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="sidebar-nav">
+          <div className="nav-group-label">Asosiy Boshqaruv</div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("overview");
+              setSidebarOpen(false);
+            }}
+            className={`nav-tab-item ${activeTab === "overview" ? "active" : ""}`}
+          >
+            <div className="nav-icon-label">
+              <BarChart2 size={17} />
+              <span>Umumiy Ko&apos;rinish</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("moderation");
+              setSidebarOpen(false);
+            }}
+            className={`nav-tab-item ${activeTab === "moderation" ? "active" : ""}`}
+          >
+            <div className="nav-icon-label">
+              <Clock size={17} />
+              <span>Moderatsiya & Arizalar</span>
+            </div>
+            {pendingModerationCount > 0 && (
+              <span className="nav-counter-badge pulse-badge">
+                {pendingModerationCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("users");
+              setSidebarOpen(false);
+            }}
+            className={`nav-tab-item ${activeTab === "users" ? "active" : ""}`}
+          >
+            <div className="nav-icon-label">
+              <Users size={17} />
+              <span>Foydalanuvchilar & Rollar</span>
+            </div>
+            <span className="nav-count-sub">{users.length}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("listings");
+              setSidebarOpen(false);
+            }}
+            className={`nav-tab-item ${activeTab === "listings" ? "active" : ""}`}
+          >
+            <div className="nav-icon-label">
+              <Package size={17} />
+              <span>Barcha E&apos;lonlar</span>
+            </div>
+            <span className="nav-count-sub">{listings.length}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("orders");
+              setSidebarOpen(false);
+            }}
+            className={`nav-tab-item ${activeTab === "orders" ? "active" : ""}`}
+          >
+            <div className="nav-icon-label">
+              <ShoppingBag size={17} />
+              <span>Savdolar & Escrow</span>
+            </div>
+            <span className="nav-count-sub">{orders.length}</span>
+          </button>
+        </nav>
+
+        {/* Sidebar Bottom Footer */}
+        <div className="sidebar-footer-group">
+          <Link href="/" className="sidebar-store-link">
+            <Store size={16} />
+            <span>Do&apos;konga O&apos;tish</span>
+            <ExternalLink size={13} className="ml-auto" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleAdminLogout}
+            className="sidebar-logout-btn"
+          >
+            <LogOut size={16} />
+            <span>Chiqish</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Admin Workspace */}
+      <div className="admin-main-viewport">
+        {/* Top Header Bar */}
+        <header className="admin-topbar">
+          <div className="topbar-left">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="mobile-sidebar-toggle-btn"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div className="topbar-breadcrumbs">
+              <span className="breadcrumb-root">Admin</span>
+              <ChevronRight size={14} className="breadcrumb-sep" />
+              <span className="breadcrumb-current">
+                {activeTab === "overview" && "Umumiy Ko'rinish"}
+                {activeTab === "moderation" && "Moderatsiya & Yangi Arizalar"}
+                {activeTab === "users" && "Foydalanuvchilar va Rollar"}
+                {activeTab === "listings" && "Barcha E'lonlar Boshqaruvi"}
+                {activeTab === "orders" && "Savdolar & Escrow Himoyasi"}
+              </span>
             </div>
           </div>
 
-          <div className="admin-header-actions">
+          <div className="topbar-right">
+            <div className="connection-status-pill">
+              <span className="status-live-dot" />
+              <span>Supabase Realtime</span>
+            </div>
+
             <button
               type="button"
               onClick={() => {
                 if (sbRef.current) fetchAllData(sbRef.current);
               }}
-              className="admin-action-pill"
-              title="Yangilash"
+              disabled={isRefreshing}
+              className="topbar-refresh-btn"
+              title="Ma'lumotlarni yangilash"
             >
-              <RefreshCw size={14} /> Yangilash
-            </button>
-
-            <button
-              type="button"
-              onClick={handleAdminLogout}
-              className="admin-logout-pill"
-            >
-              <LogOut size={14} /> Chiqish
+              <RefreshCw
+                size={14}
+                className={isRefreshing ? "animate-spin" : ""}
+              />
+              <span className="hidden-mobile-btn">Yangilash</span>
             </button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Admin Content Container */}
-      <main className="container admin-main-body">
-        {/* Navigation Tabs Bar */}
-        <div className="admin-nav-tabs-bar">
-          <button
-            type="button"
-            onClick={() => setActiveTab("overview")}
-            className={`admin-tab-btn ${activeTab === "overview" ? "active" : ""}`}
-          >
-            <BarChart2 size={16} />
-            <span>Umumiy Ko&apos;rinish</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("moderation")}
-            className={`admin-tab-btn ${activeTab === "moderation" ? "active" : ""}`}
-          >
-            <Clock size={16} />
-            <span>Moderatsiya & Arizalar</span>
-            {pendingModerationCount > 0 && (
-              <span className="tab-counter-badge">{pendingModerationCount}</span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("users")}
-            className={`admin-tab-btn ${activeTab === "users" ? "active" : ""}`}
-          >
-            <Users size={16} />
-            <span>Foydalanuvchilar & Rollar</span>
-            <span className="tab-counter-badge neutral">{users.length}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("listings")}
-            className={`admin-tab-btn ${activeTab === "listings" ? "active" : ""}`}
-          >
-            <Package size={16} />
-            <span>Barcha E&apos;lonlar</span>
-            <span className="tab-counter-badge neutral">{listings.length}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("orders")}
-            className={`admin-tab-btn ${activeTab === "orders" ? "active" : ""}`}
-          >
-            <ShoppingBag size={16} />
-            <span>Savdolar & Escrow</span>
-          </button>
-        </div>
-
-        {/* ============================================================ */}
-        {/* TAB 1: OVERVIEW & STATS */}
-        {/* ============================================================ */}
-        {activeTab === "overview" && (
-          <div className="admin-tab-content animate-fade-in">
-            {/* Stat KPI Cards Grid */}
-            <div className="kpi-cards-grid">
-              <div className="kpi-card" onClick={() => setActiveTab("moderation")}>
-                <div className="kpi-icon-bubble amber-bubble">
-                  <Clock size={22} className="text-amber" />
-                </div>
-                <div className="kpi-details">
-                  <span className="kpi-title">Kutilayotgan E&apos;lonlar</span>
-                  <div className="kpi-number">{pendingModerationCount} ta</div>
-                  <span className="kpi-subtext">Moderatsiyani kutayotgan arizalar</span>
-                </div>
-              </div>
-
-              <div className="kpi-card" onClick={() => setActiveTab("listings")}>
-                <div className="kpi-icon-bubble emerald-bubble">
-                  <Package size={22} className="text-emerald" />
-                </div>
-                <div className="kpi-details">
-                  <span className="kpi-title">Faol Marketplace E&apos;lonlari</span>
-                  <div className="kpi-number">{activeListingsCount} ta</div>
-                  <span className="kpi-subtext">Sotuvdagi tasdiqlangan akkauntlar</span>
-                </div>
-              </div>
-
-              <div className="kpi-card" onClick={() => setActiveTab("users")}>
-                <div className="kpi-icon-bubble blue-bubble">
-                  <Users size={22} className="text-blue" />
-                </div>
-                <div className="kpi-details">
-                  <span className="kpi-title">Foydalanuvchilar Bazasi</span>
-                  <div className="kpi-number">{users.length} nafar</div>
-                  <span className="kpi-subtext">
-                    {totalBuyers} xaridor / {totalSellers} sotuvchi
-                  </span>
-                </div>
-              </div>
-
-              <div className="kpi-card" onClick={() => setActiveTab("orders")}>
-                <div className="kpi-icon-bubble rose-bubble">
-                  <DollarSign size={22} className="text-rose" />
-                </div>
-                <div className="kpi-details">
-                  <span className="kpi-title">Muvaffaqiyatli Savdo Hajmi</span>
-                  <div className="kpi-number">${totalPlatformVolume.toLocaleString()}</div>
-                  <span className="kpi-subtext">{totalCompletedOrders} ta yakunlangan tranzaksiya</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Overview Action Banner for Pending Moderation */}
-            {pendingModerationCount > 0 && (
-              <div className="moderation-alert-banner">
-                <div className="alert-banner-left">
-                  <div className="pulse-dot" />
-                  <div>
-                    <h3 className="alert-heading">
-                      {pendingModerationCount} ta yangi akkaunt e&apos;loni tasdiqlashni kutmoqda!
-                    </h3>
-                    <p className="alert-sub">
-                      Foydalanuvchilar yangi e&apos;lon yuborishgan. Ularni tekshirib, Approve qilsangiz, avtomatik ravishda saytga chiqadi va foydalanuvchiga Sotuvchi maqomi beriladi.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
+        {/* Content Body Area */}
+        <main className="admin-content-scroll">
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === "overview" && (
+            <div className="tab-pane animate-fade-in">
+              {/* Stat Metric Grid */}
+              <div className="metrics-grid">
+                <div
+                  className="metric-card card-moderation cursor-pointer"
                   onClick={() => setActiveTab("moderation")}
-                  className="alert-review-btn"
                 >
-                  Ko&apos;rib Chiqish <ArrowRight size={15} />
-                </button>
-              </div>
-            )}
-
-            {/* Quick Summary Tables Grid */}
-            <div className="overview-summary-grid">
-              {/* Left: Recent Pending Submissions */}
-              <div className="summary-panel-card">
-                <div className="panel-header">
-                  <h3 className="panel-title">Oxirgi Yuborilgan Arizalar</h3>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("moderation")}
-                    className="panel-link-btn"
-                  >
-                    Barchasi <ArrowRight size={13} />
-                  </button>
+                  <div className="metric-icon-wrap bg-amber-soft">
+                    <Clock size={22} className="text-amber" />
+                  </div>
+                  <div className="metric-data">
+                    <span className="metric-label">Kutilayotgan E&apos;lonlar</span>
+                    <div className="metric-value-row">
+                      <span className="metric-number">{pendingModerationCount}</span>
+                      <span className="metric-unit">ta ariza</span>
+                    </div>
+                    <span className="metric-sub-hint">
+                      {pendingModerationCount > 0
+                        ? "Tezkor moderatsiyani kutyapti"
+                        : "Barcha arizalar ko'rib chiqilgan"}
+                    </span>
+                  </div>
                 </div>
 
-                {pendingListings.length === 0 ? (
-                  <div className="empty-mini-box">
-                    <CheckCircle2 size={32} className="text-emerald" />
-                    <span>Hozirda kutilayotgan moderatsiya mavjud emas</span>
+                <div
+                  className="metric-card card-listings cursor-pointer"
+                  onClick={() => setActiveTab("listings")}
+                >
+                  <div className="metric-icon-wrap bg-blue-soft">
+                    <Package size={22} className="text-blue" />
                   </div>
-                ) : (
-                  <div className="mini-submissions-list">
-                    {pendingListings.slice(0, 4).map((item) => (
-                      <div key={item.id} className="mini-sub-item">
-                        <div className="mini-sub-info">
-                          <span className="mini-sub-title">{item.title}</span>
-                          <div className="mini-sub-meta">
-                            <span className="badge-platform">{getPlatformLabel(item.platform)}</span>
-                            <span className="badge-price">${item.price}</span>
-                            <span className="meta-author">
-                              {item.seller?.full_name || "Yangi Xaridor"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mini-actions">
-                          <button
-                            type="button"
-                            onClick={() => handleApproveListing(item)}
-                            className="btn-quick-approve"
-                            title="Tasdiqlash (Approve)"
-                          >
-                            <Check size={14} /> Approve
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openRejectModal(item)}
-                            className="btn-quick-reject"
-                            title="Rad etish (Reject)"
-                          >
-                            <X size={14} /> Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="metric-data">
+                    <span className="metric-label">Faol Marketplace E&apos;lonlari</span>
+                    <div className="metric-value-row">
+                      <span className="metric-number">{activeListingsCount}</span>
+                      <span className="metric-unit">ta hisob</span>
+                    </div>
+                    <span className="metric-sub-hint">Sotuvda tasdiqlangan</span>
                   </div>
-                )}
-              </div>
-
-              {/* Right: Platform System Roles Stats */}
-              <div className="summary-panel-card">
-                <div className="panel-header">
-                  <h3 className="panel-title">Rollar va Huquqlar Holati</h3>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("users")}
-                    className="panel-link-btn"
-                  >
-                    Foydalanuvchilarni Boshqarish <ArrowRight size={13} />
-                  </button>
                 </div>
 
-                <div className="roles-breakdown-list">
-                  <div className="role-stat-item">
-                    <div className="role-stat-left">
-                      <div className="role-dot role-dot-buyer" />
-                      <div>
-                        <div className="role-stat-name">Xaridorlar (Buyers)</div>
-                        <div className="role-stat-desc">Oddiy ro&apos;yxatdan o&apos;tgan foydalanuvchilar</div>
-                      </div>
-                    </div>
-                    <span className="role-stat-count">{totalBuyers} nafar</span>
+                <div
+                  className="metric-card card-users cursor-pointer"
+                  onClick={() => setActiveTab("users")}
+                >
+                  <div className="metric-icon-wrap bg-purple-soft">
+                    <Users size={22} className="text-purple" />
                   </div>
-
-                  <div className="role-stat-item">
-                    <div className="role-stat-left">
-                      <div className="role-dot role-dot-seller" />
-                      <div>
-                        <div className="role-stat-name">Tasdiqlangan Sotuvchilar (Sellers)</div>
-                        <div className="role-stat-desc">Arizasi tasdiqlangan va kabineti ochiqlar</div>
-                      </div>
+                  <div className="metric-data">
+                    <span className="metric-label">Foydalanuvchilar Bazasi</span>
+                    <div className="metric-value-row">
+                      <span className="metric-number">{users.length}</span>
+                      <span className="metric-unit">nafar</span>
                     </div>
-                    <span className="role-stat-count text-emerald">{totalSellers} nafar</span>
+                    <span className="metric-sub-hint">
+                      {users.filter((u) => u.role === "seller").length} sotuvchi /{" "}
+                      {users.filter((u) => u.role === "buyer").length} xaridor
+                    </span>
                   </div>
+                </div>
 
-                  <div className="role-stat-item">
-                    <div className="role-stat-left">
-                      <div className="role-dot role-dot-admin" />
-                      <div>
-                        <div className="role-stat-name">Platforma Adminlari</div>
-                        <div className="role-stat-desc">To&apos;liq boshqaruv huquqiga ega ma&apos;murlar</div>
-                      </div>
+                <div
+                  className="metric-card card-orders cursor-pointer"
+                  onClick={() => setActiveTab("orders")}
+                >
+                  <div className="metric-icon-wrap bg-emerald-soft">
+                    <DollarSign size={22} className="text-emerald" />
+                  </div>
+                  <div className="metric-data">
+                    <span className="metric-label">Muvaffaqiyatli Savdo</span>
+                    <div className="metric-value-row">
+                      <span className="metric-number">${totalVolume.toLocaleString()}</span>
                     </div>
-                    <span className="role-stat-count text-rose">
-                      {users.filter((u) => u.role === "admin").length} nafar
+                    <span className="metric-sub-hint">
+                      {orders.filter((o) => o.status === "completed" || o.status === "confirmed").length} ta yakunlangan tranzaksiya
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* ============================================================ */}
-        {/* TAB 2: MODERATION & APPLICATIONS */}
-        {/* ============================================================ */}
-        {activeTab === "moderation" && (
-          <div className="admin-tab-content animate-fade-in">
-            <div className="tab-header-row">
-              <div>
-                <h2 className="tab-heading">Moderatsiya & E&apos;lon Arizalari</h2>
-                <p className="tab-sub">
-                  Foydalanuvchilar tomonidan sotuvga yuborilgan akkauntlarni tekshiring va tasdiqlang
-                </p>
-              </div>
-            </div>
+              {/* Two Column Layout: Quick Moderation Feed + Role Distribution */}
+              <div className="overview-split-layout">
+                {/* Left Column: Quick Moderation Stream */}
+                <div className="admin-surface-card">
+                  <div className="card-header-flex">
+                    <div className="header-title-box">
+                      <Clock size={18} className="text-amber" />
+                      <h2 className="card-section-title">
+                        Oxirgi Yuborilgan Arizalar
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("moderation")}
+                      className="card-action-link"
+                    >
+                      Barchasi ({pendingModerationCount}) <ArrowRight size={14} />
+                    </button>
+                  </div>
 
-            {pendingListings.length === 0 ? (
-              <div className="empty-state-card">
-                <CheckCircle2 size={48} className="text-emerald" />
-                <h3 className="empty-title">Kutilayotgan arizalar yo&apos;q!</h3>
-                <p className="empty-sub">
-                  Barcha yuborilgan e&apos;lonlar ko&apos;rib chiqilgan va moderatsiya qilingan.
-                </p>
-              </div>
-            ) : (
-              <div className="moderation-cards-list">
-                {pendingListings.map((item) => (
-                  <div key={item.id} className="moderation-card">
-                    <div className="moderation-card-body">
-                      {/* Top Info */}
-                      <div className="mod-header-line">
-                        <div className="mod-title-wrap">
-                          <span className="mod-title">{item.title}</span>
-                          <span className="mod-price">${item.price}</span>
+                  {pendingListings.length === 0 ? (
+                    <div className="empty-overview-box">
+                      <CheckCircle2 size={36} className="text-emerald" />
+                      <p className="empty-title">Hozirda yangi arizalar yo&apos;q</p>
+                      <span className="empty-sub">
+                        Sotuvchilar yangi hisob joylaganda bu yerda paydo bo&apos;ladi
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="quick-moderation-list">
+                      {pendingListings.slice(0, 3).map((item) => (
+                        <div key={item.id} className="quick-mod-item">
+                          <div className="quick-mod-main">
+                            <div className="quick-mod-title">{item.title}</div>
+                            <div className="quick-mod-meta">
+                              <span className="platform-tag">
+                                {getPlatformLabel(item.platform)}
+                              </span>
+                              <span className="ovr-tag">{item.team_rating || 0} OVR</span>
+                              <span className="price-tag">${item.price}</span>
+                            </div>
+                            <div className="quick-mod-seller">
+                              Sotuvchi:{" "}
+                              <strong>
+                                {item.seller?.full_name ||
+                                  item.seller?.email ||
+                                  "Noma'lum"}
+                              </strong>
+                            </div>
+                          </div>
+
+                          <div className="quick-mod-actions">
+                            <button
+                              type="button"
+                              onClick={() => handleApproveListing(item)}
+                              disabled={actionProcessing}
+                              className="btn-quick-approve"
+                              title="Tasdiqlash"
+                            >
+                              <Check size={14} /> Tasdiqlash
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setListingToReject(item);
+                                setRejectModalOpen(true);
+                              }}
+                              disabled={actionProcessing}
+                              className="btn-quick-reject"
+                              title="Rad etish"
+                            >
+                              <X size={14} /> Rad etish
+                            </button>
+                          </div>
                         </div>
-                        <span className="mod-pending-badge">
-                          <Clock size={12} /> Tekshirish kutilmoqda
-                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Platform Statistics & Role Breakdown */}
+                <div className="admin-surface-card">
+                  <div className="card-header-flex">
+                    <div className="header-title-box">
+                      <Shield size={18} className="text-blue" />
+                      <h2 className="card-section-title">
+                        Rollar va Huquqlar Holati
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("users")}
+                      className="card-action-link"
+                    >
+                      Boshqarish <ArrowRight size={14} />
+                    </button>
+                  </div>
+
+                  <div className="role-distribution-list">
+                    <div className="role-stat-row">
+                      <div className="role-stat-info">
+                        <span className="role-dot dot-buyer" />
+                        <div>
+                          <div className="role-stat-name">Xaridorlar (Buyers)</div>
+                          <div className="role-stat-sub">
+                            Oddiy ro&apos;yxatdan o&apos;tgan foydalanuvchilar
+                          </div>
+                        </div>
+                      </div>
+                      <div className="role-stat-count">
+                        {users.filter((u) => u.role === "buyer").length} nafar
+                      </div>
+                    </div>
+
+                    <div className="role-stat-row">
+                      <div className="role-stat-info">
+                        <span className="role-dot dot-seller" />
+                        <div>
+                          <div className="role-stat-name">
+                            Tasdiqlangan Sotuvchilar (Sellers)
+                          </div>
+                          <div className="role-stat-sub">
+                            Arizasi tasdiqlangan va kabineti ochiqlar
+                          </div>
+                        </div>
+                      </div>
+                      <div className="role-stat-count">
+                        {users.filter((u) => u.role === "seller").length} nafar
+                      </div>
+                    </div>
+
+                    <div className="role-stat-row">
+                      <div className="role-stat-info">
+                        <span className="role-dot dot-admin" />
+                        <div>
+                          <div className="role-stat-name">
+                            Platforma Adminlari
+                          </div>
+                          <div className="role-stat-sub">
+                            To&apos;liq boshqaruv huquqiga ega me&apos;morlar
+                          </div>
+                        </div>
+                      </div>
+                      <div className="role-stat-count">
+                        {users.filter((u) => u.role === "admin").length} nafar
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: MODERATSIYA & ARIZALAR */}
+          {activeTab === "moderation" && (
+            <div className="tab-pane animate-fade-in">
+              <div className="pane-header-row">
+                <div>
+                  <h2 className="pane-main-title">E&apos;lonlar Moderatsiyasi</h2>
+                  <p className="pane-sub-desc">
+                    Sotuvchilar tomonidan yuklangan va tasdiqlashni kutayotgan barcha hisoblar
+                  </p>
+                </div>
+                <div className="pane-counter-badge">
+                  {pendingListings.length} ta kutayotgan ariza
+                </div>
+              </div>
+
+              {pendingListings.length === 0 ? (
+                <div className="admin-empty-pane">
+                  <CheckCircle2 size={48} className="text-emerald" />
+                  <h3 className="empty-pane-title">Moderatsiya navbati bo&apos;sh!</h3>
+                  <p className="empty-pane-desc">
+                    Hozirda ko&apos;rib chiqilishi kerak bo&apos;lgan yangi arizalar mavjud emas.
+                  </p>
+                </div>
+              ) : (
+                <div className="moderation-cards-grid">
+                  {pendingListings.map((item) => (
+                    <div key={item.id} className="moderation-card">
+                      <div className="mod-card-top">
+                        <div className="mod-card-badges">
+                          <span className="platform-tag">
+                            {getPlatformLabel(item.platform)}
+                          </span>
+                          <span className="ovr-tag">{item.team_rating || 0} OVR</span>
+                          <span className="pending-status-tag">
+                            <Clock size={11} /> Tekshiruvda
+                          </span>
+                        </div>
+                        <div className="mod-card-price">${item.price}</div>
                       </div>
 
-                      {/* Details Pills */}
-                      <div className="mod-meta-pills">
-                        <span className="mod-pill">
-                          <strong>Platforma:</strong> {getPlatformLabel(item.platform)}
-                        </span>
-                        {item.team_rating && (
-                          <span className="mod-pill">
-                            <strong>Team OVR:</strong> {item.team_rating}
+                      <h3 className="mod-card-title">{item.title}</h3>
+
+                      <div className="mod-card-stats-grid">
+                        <div className="stat-pill">
+                          <span className="stat-name">Coinlar:</span>
+                          <span className="stat-val text-amber">
+                            {item.coin_balance || item.coin_amount || 0}
                           </span>
-                        )}
-                        {item.coin_balance && (
-                          <span className="mod-pill">
-                            <strong>Coins/GP:</strong> {item.coin_balance.toLocaleString()}
+                        </div>
+                        <div className="stat-pill">
+                          <span className="stat-name">GP:</span>
+                          <span className="stat-val text-blue">
+                            {item.gp_balance || 0}
                           </span>
-                        )}
-                        <span className="mod-pill">
-                          <strong>Sana:</strong> {formatDate(item.created_at)}
-                        </span>
+                        </div>
+                        <div className="stat-pill">
+                          <span className="stat-name">Turi:</span>
+                          <span className="stat-val">
+                            {item.type === "coins" ? "Coin Paketi" : "Akkount"}
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Key Players */}
                       {item.key_players && item.key_players.length > 0 && (
-                        <div className="mod-players-row">
-                          <span className="players-label">Yulduz O&apos;yinchilar:</span>
-                          <div className="players-tags">
-                            {item.key_players.map((p, idx) => (
-                              <span key={idx} className="player-tag">
+                        <div className="mod-players-box">
+                          <span className="players-label">Yulduzlar:</span>
+                          <div className="player-chips">
+                            {item.key_players.map((p: string, idx: number) => (
+                              <span key={idx} className="player-chip">
                                 {p}
                               </span>
                             ))}
@@ -974,399 +1127,433 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {/* Description */}
                       {item.description && (
-                        <div className="mod-desc-box">
-                          <span className="desc-label">Tavsif:</span> {item.description}
+                        <div className="mod-desc-quote">
+                          &ldquo;{item.description}&rdquo;
                         </div>
                       )}
 
-                      {/* Seller Contact Info */}
-                      <div className="mod-seller-info">
-                        <span className="seller-info-title">Sotuvchi Ma&apos;lumotlari:</span>
-                        <div className="seller-contact-chips">
-                          <span className="contact-chip">
-                            <Users size={13} /> {item.seller?.full_name || "Yangi Xaridor"}
-                          </span>
-                          {item.seller?.email && (
-                            <span className="contact-chip">
-                              <ExternalLink size={13} /> {item.seller.email}
-                            </span>
-                          )}
-                          {item.seller?.telegram_username && (
-                            <span className="contact-chip highlight-chip">
-                              <MessageSquare size={13} /> @{item.seller.telegram_username}
-                            </span>
-                          )}
+                      <div className="mod-seller-footer">
+                        <div className="seller-profile-wrap">
+                          <div className="seller-sm-avatar">
+                            {item.seller?.full_name?.charAt(0) || "S"}
+                          </div>
+                          <div>
+                            <div className="seller-sm-name">
+                              {item.seller?.full_name || item.seller?.email || "Sotuvchi"}
+                            </div>
+                            {item.seller?.telegram_username && (
+                              <a
+                                href={`https://t.me/${item.seller.telegram_username.replace("@", "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="seller-tg-link"
+                              >
+                                @{item.seller.telegram_username.replace("@", "")}
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      <div className="mod-action-buttons">
+                        <button
+                          type="button"
+                          onClick={() => handleApproveListing(item)}
+                          disabled={actionProcessing}
+                          className="btn-mod-approve"
+                        >
+                          <Check size={16} /> Tasdiqlash & Saytga Chiqarish
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setListingToReject(item);
+                            setRejectModalOpen(true);
+                          }}
+                          disabled={actionProcessing}
+                          className="btn-mod-reject"
+                        >
+                          <X size={16} /> Rad Etish
+                        </button>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                    {/* Action Buttons */}
-                    <div className="moderation-card-actions">
-                      <button
-                        type="button"
-                        disabled={actionProcessing}
-                        onClick={() => handleApproveListing(item)}
-                        className="btn-approve-action"
-                      >
-                        <Check size={16} /> Tasdiqlash & Seller Qilish (Approve)
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={actionProcessing}
-                        onClick={() => openRejectModal(item)}
-                        className="btn-reject-action"
-                      >
-                        <X size={16} /> Rad Etish (Reject)
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/* TAB 3: USERS & ROLES MANAGEMENT */}
-        {/* ============================================================ */}
-        {activeTab === "users" && (
-          <div className="admin-tab-content animate-fade-in">
-            <div className="tab-header-row">
-              <div>
-                <h2 className="tab-heading">Foydalanuvchilar & Rollar Boshqaruvi</h2>
-                <p className="tab-sub">
-                  Platforma a&apos;zolari, ularning rollari va ruxsatlarini bir klikda o&apos;zgartirish
-                </p>
+          {/* TAB 3: FOYDALANUVCHILAR VA ROLLAR */}
+          {activeTab === "users" && (
+            <div className="tab-pane animate-fade-in">
+              <div className="pane-header-row">
+                <div>
+                  <h2 className="pane-main-title">Foydalanuvchilar Boshqaruvi</h2>
+                  <p className="pane-sub-desc">
+                    Tizimdagi barcha profillar va ularning huquqlarini (Admin, Sotuvchi, Xaridor) boshqarish
+                  </p>
+                </div>
               </div>
 
-              {/* Filters & Search */}
-              <div className="tab-filters-row">
-                <div className="search-input-wrap">
-                  <Search size={15} className="search-icon" />
+              {/* Filter & Search Toolbar */}
+              <div className="table-toolbar">
+                <div className="search-box">
+                  <Search size={16} className="search-icon" />
                   <input
                     type="text"
-                    placeholder="Ism, email yoki telegram bo'yicha qidiruv..."
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
-                    className="admin-search-input"
+                    placeholder="Ism, email yoki Telegram bo'yicha qidiruv..."
+                    className="toolbar-search-input"
                   />
                 </div>
 
-                <select
-                  value={userRoleFilter}
-                  onChange={(e) => setUserRoleFilter(e.target.value)}
-                  className="admin-select-filter"
-                >
-                  <option value="all">Barcha Rollar</option>
-                  <option value="buyer">Faqat Xaridorlar (Buyer)</option>
-                  <option value="seller">Faqat Sotuvchilar (Seller)</option>
-                  <option value="admin">Faqat Adminlar (Admin)</option>
-                </select>
+                <div className="filter-select-box">
+                  <Filter size={14} className="filter-icon" />
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => setUserRoleFilter(e.target.value)}
+                    className="toolbar-select"
+                  >
+                    <option value="all">Barcha rollar ({users.length})</option>
+                    <option value="buyer">Faqat Xaridorlar</option>
+                    <option value="seller">Faqat Sotuvchilar</option>
+                    <option value="admin">Faqat Adminlar</option>
+                  </select>
+                </div>
               </div>
-            </div>
 
-            {/* Users Table */}
-            <div className="admin-table-card">
-              <div className="table-responsive">
-                <table className="admin-data-table">
-                  <thead>
-                    <tr>
-                      <th>Foydalanuvchi</th>
-                      <th>Email / Aloqa</th>
-                      <th>Joriy Rol</th>
-                      <th>Sotuvchi Maqomi</th>
-                      <th>Ro&apos;yxatdan O&apos;tgan</th>
-                      <th>Rolni O&apos;zgartirish</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map((u) => (
-                      <tr key={u.id}>
-                        <td>
-                          <div className="user-table-cell">
-                            <div
-                              className={`user-table-avatar ${
-                                u.role === "admin"
-                                  ? "av-admin"
-                                  : u.role === "seller"
-                                  ? "av-seller"
-                                  : "av-buyer"
-                              }`}
-                            >
-                              {(u.full_name || u.email || "U").charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="user-cell-name">
-                                {u.full_name || "Nomsiz Foydalanuvchi"}
-                              </div>
-                              {u.telegram_username && (
-                                <div className="user-cell-tg">@{u.telegram_username}</div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="email-cell">{u.email || "Email mavjud emas"}</td>
-
-                        <td>
-                          <span className={`role-badge-pill role-${u.role}`}>
-                            {u.role === "admin"
-                              ? "Admin"
-                              : u.role === "seller"
-                              ? "Sotuvchi"
-                              : "Xaridor"}
-                          </span>
-                        </td>
-
-                        <td>
-                          {u.seller_status === "approved" && (
-                            <span className="status-tag tag-approved">Tasdiqlangan</span>
-                          )}
-                          {u.seller_status === "pending" && (
-                            <span className="status-tag tag-pending">Kutilmoqda</span>
-                          )}
-                          {u.seller_status === "rejected" && (
-                            <span className="status-tag tag-rejected">Rad etilgan</span>
-                          )}
-                          {!u.seller_status && (
-                            <span className="status-tag tag-none">Mavjud emas</span>
-                          )}
-                        </td>
-
-                        <td className="date-cell">{formatDate(u.created_at)}</td>
-
-                        <td>
-                          <div className="role-switch-actions">
-                            <button
-                              type="button"
-                              onClick={() => handleChangeUserRole(u.id, "buyer")}
-                              className={`btn-role-opt ${u.role === "buyer" ? "active-buyer" : ""}`}
-                              title="Buyer qilish"
-                            >
-                              Buyer
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleChangeUserRole(u.id, "seller")}
-                              className={`btn-role-opt ${u.role === "seller" ? "active-seller" : ""}`}
-                              title="Seller qilish"
-                            >
-                              Seller
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleChangeUserRole(u.id, "admin")}
-                              className={`btn-role-opt ${u.role === "admin" ? "active-admin" : ""}`}
-                              title="Admin qilish"
-                            >
-                              Admin
-                            </button>
-                          </div>
-                        </td>
+              {/* Users Table */}
+              <div className="admin-table-container">
+                <div className="table-responsive">
+                  <table className="admin-custom-table">
+                    <thead>
+                      <tr>
+                        <th>Foydalanuvchi</th>
+                        <th>Email Manzili</th>
+                        <th>Telegram</th>
+                        <th>Joriy Rol</th>
+                        <th>Sotuvchi Holati</th>
+                        <th>Rolni O&apos;zgartirish</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="table-empty-td">
+                            Foydalanuvchilar topilmadi
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredUsers.map((u) => (
+                          <tr key={u.id}>
+                            <td>
+                              <div className="user-cell-flex">
+                                <div
+                                  className={`user-table-av av-${u.role || "buyer"}`}
+                                >
+                                  {(u.full_name || u.email || "U")
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="table-user-name">
+                                    {u.full_name || "Ismsiz"}
+                                  </div>
+                                  <div className="table-user-id">
+                                    ID: {u.id.slice(0, 8)}...
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="email-td">{u.email || "—"}</td>
+                            <td>
+                              {u.telegram_username ? (
+                                <a
+                                  href={`https://t.me/${u.telegram_username.replace("@", "")}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="table-tg-link"
+                                >
+                                  @{u.telegram_username.replace("@", "")}
+                                </a>
+                              ) : (
+                                <span className="text-muted">—</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className={`role-pill role-${u.role || "buyer"}`}>
+                                {u.role === "admin"
+                                  ? "Admin"
+                                  : u.role === "seller"
+                                  ? "Sotuvchi"
+                                  : "Xaridor"}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                className={`seller-status-tag status-${u.seller_status || "none"}`}
+                              >
+                                {u.seller_status === "approved"
+                                  ? "Tasdiqlangan"
+                                  : u.seller_status === "pending"
+                                  ? "Kutilmoqda"
+                                  : u.seller_status === "rejected"
+                                  ? "Rad etilgan"
+                                  : "Yo'q"}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="role-switch-btn-group">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateUserRole(u.id, "buyer")}
+                                  className={`btn-role-opt ${u.role === "buyer" || !u.role ? "active-buyer" : ""}`}
+                                >
+                                  Buyer
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateUserRole(u.id, "seller")}
+                                  className={`btn-role-opt ${u.role === "seller" ? "active-seller" : ""}`}
+                                >
+                                  Seller
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateUserRole(u.id, "admin")}
+                                  className={`btn-role-opt ${u.role === "admin" ? "active-admin" : ""}`}
+                                >
+                                  Admin
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ============================================================ */}
-        {/* TAB 4: ALL LISTINGS MANAGEMENT */}
-        {/* ============================================================ */}
-        {activeTab === "listings" && (
-          <div className="admin-tab-content animate-fade-in">
-            <div className="tab-header-row">
-              <div>
-                <h2 className="tab-heading">Barcha Marketplace E&apos;lonlari</h2>
-                <p className="tab-sub">
-                  Platformadagi barcha faol, o&apos;chirilgan va kutilayotgan e&apos;lonlar nazorati
-                </p>
+          {/* TAB 4: BARCHA E'LONLAR */}
+          {activeTab === "listings" && (
+            <div className="tab-pane animate-fade-in">
+              <div className="pane-header-row">
+                <div>
+                  <h2 className="pane-main-title">E&apos;lonlar Katalogi</h2>
+                  <p className="pane-sub-desc">
+                    Saytdagi barcha faol, kutilayotgan va sotilgan akkountlar ro&apos;yxati
+                  </p>
+                </div>
               </div>
 
-              {/* Filters */}
-              <div className="tab-filters-row">
-                <div className="search-input-wrap">
-                  <Search size={15} className="search-icon" />
+              {/* Filter & Search Toolbar */}
+              <div className="table-toolbar">
+                <div className="search-box">
+                  <Search size={16} className="search-icon" />
                   <input
                     type="text"
-                    placeholder="Sarlavha bo'yicha qidiruv..."
                     value={listingSearch}
                     onChange={(e) => setListingSearch(e.target.value)}
-                    className="admin-search-input"
+                    placeholder="Sarlavha yoki platforma bo'yicha..."
+                    className="toolbar-search-input"
                   />
                 </div>
 
-                <select
-                  value={listingStatusFilter}
-                  onChange={(e) => setListingStatusFilter(e.target.value)}
-                  className="admin-select-filter"
-                >
-                  <option value="all">Barcha Statuslar</option>
-                  <option value="active">Faol (Active)</option>
-                  <option value="pending_review">Kutilmoqda (Pending)</option>
-                  <option value="rejected">Rad etilgan (Rejected)</option>
-                  <option value="removed">O&apos;chirilgan (Removed)</option>
-                  <option value="sold">Sotilgan (Sold)</option>
-                </select>
+                <div className="filter-select-box">
+                  <Filter size={14} className="filter-icon" />
+                  <select
+                    value={listingStatusFilter}
+                    onChange={(e) => setListingStatusFilter(e.target.value)}
+                    className="toolbar-select"
+                  >
+                    <option value="all">Barcha holatlar ({listings.length})</option>
+                    <option value="active">Faol (Sotuvda)</option>
+                    <option value="pending_review">Moderatsiyada</option>
+                    <option value="sold">Sotilgan</option>
+                    <option value="rejected">Rad etilgan</option>
+                  </select>
+                </div>
               </div>
-            </div>
 
-            <div className="admin-table-card">
-              <div className="table-responsive">
-                <table className="admin-data-table">
-                  <thead>
-                    <tr>
-                      <th>E&apos;lon Nomi</th>
-                      <th>Platforma</th>
-                      <th>Narx</th>
-                      <th>Sotuvchi</th>
-                      <th>Status</th>
-                      <th>Sana</th>
-                      <th>Amallar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredListings.map((l) => (
-                      <tr key={l.id}>
-                        <td>
-                          <div className="listing-table-name">
-                            <span className="name-bold">{l.title}</span>
-                            {l.team_rating && (
-                              <span className="sub-ovr">OVR: {l.team_rating}</span>
-                            )}
-                          </div>
-                        </td>
-
-                        <td>
-                          <span className="platform-tag">{getPlatformLabel(l.platform)}</span>
-                        </td>
-
-                        <td className="price-cell">${l.price}</td>
-
-                        <td>{l.seller?.full_name || "Sotuvchi"}</td>
-
-                        <td>
-                          {l.status === "active" && (
-                            <span className="status-tag tag-approved">Faol</span>
-                          )}
-                          {l.status === "pending_review" && (
-                            <span className="status-tag tag-pending">Kutilmoqda</span>
-                          )}
-                          {l.status === "rejected" && (
-                            <span className="status-tag tag-rejected">Rad etilgan</span>
-                          )}
-                          {l.status === "removed" && (
-                            <span className="status-tag tag-none">O&apos;chirilgan</span>
-                          )}
-                          {l.status === "sold" && (
-                            <span className="status-tag tag-approved">Sotildi</span>
-                          )}
-                        </td>
-
-                        <td className="date-cell">{formatDate(l.created_at)}</td>
-
-                        <td>
-                          <div className="listing-manage-actions">
-                            {l.status === "active" ? (
-                              <button
-                                type="button"
-                                onClick={() => handleToggleListingStatus(l.id, l.status)}
-                                className="btn-toggle-remove"
-                                title="O'chirish (Noactive qilish)"
-                              >
-                                O&apos;chirish
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleToggleListingStatus(l.id, l.status)}
-                                className="btn-toggle-active"
-                                title="Faollashtirish"
-                              >
-                                Faollashtirish
-                              </button>
-                            )}
-                          </div>
-                        </td>
+              {/* Listings Table */}
+              <div className="admin-table-container">
+                <div className="table-responsive">
+                  <table className="admin-custom-table">
+                    <thead>
+                      <tr>
+                        <th>E&apos;lon Nomi</th>
+                        <th>Platforma</th>
+                        <th>OVR / Narx</th>
+                        <th>Sotuvchi</th>
+                        <th>Holati</th>
+                        <th>Boshqaruv</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredListings.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="table-empty-td">
+                            E&apos;lonlar topilmadi
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredListings.map((l) => (
+                          <tr key={l.id}>
+                            <td>
+                              <div className="table-listing-cell">
+                                <span className="listing-bold-title">{l.title}</span>
+                                <span className="listing-date">
+                                  {formatDate(l.created_at)}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="platform-tag">
+                                {getPlatformLabel(l.platform)}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="ovr-price-cell">
+                                <span className="table-ovr-badge">{l.team_rating || 0} OVR</span>
+                                <span className="table-price-badge">${l.price}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="table-seller-name">
+                                {l.seller?.full_name || l.seller?.email || "Sotuvchi"}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`listing-status-tag status-${l.status}`}>
+                                {l.status === "active"
+                                  ? "Faol"
+                                  : l.status === "pending_review"
+                                  ? "Moderatsiyada"
+                                  : l.status === "sold"
+                                  ? "Sotilgan"
+                                  : "Rad etilgan"}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="table-actions-cell">
+                                <Link
+                                  href={`/listings/${l.id}`}
+                                  target="_blank"
+                                  className="btn-table-view"
+                                  title="Saytda ko'rish"
+                                >
+                                  <Eye size={14} />
+                                </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleListingStatus(l.id, l.status)}
+                                  className={
+                                    l.status === "active"
+                                      ? "btn-toggle-deactivate"
+                                      : "btn-toggle-activate"
+                                  }
+                                >
+                                  {l.status === "active" ? "O'chirish" : "Faollashtirish"}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ============================================================ */}
-        {/* TAB 5: ORDERS & ESCROW */}
-        {/* ============================================================ */}
-        {activeTab === "orders" && (
-          <div className="admin-tab-content animate-fade-in">
-            <div className="tab-header-row">
-              <div>
-                <h2 className="tab-heading">Savdolar & Escrow Xavfsiz Tranzaksiyalar</h2>
-                <p className="tab-sub">
-                  Platformada amalga oshirilgan to&apos;lovlar va xaridor/sotuvchi o&apos;rtasidagi savdolar
-                </p>
+          {/* TAB 5: SAVDOLAR & ESCROW */}
+          {activeTab === "orders" && (
+            <div className="tab-pane animate-fade-in">
+              <div className="pane-header-row">
+                <div>
+                  <h2 className="pane-main-title">Savdolar & Escrow Himoyasi</h2>
+                  <p className="pane-sub-desc">
+                    Xaridor va sotuvchi o&apos;rtasidagi barcha xavfsiz to&apos;lov tranzaksiyalari
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="admin-table-card">
-              <div className="table-responsive">
-                <table className="admin-data-table">
-                  <thead>
-                    <tr>
-                      <th>Buyurtma ID</th>
-                      <th>E&apos;lon</th>
-                      <th>Mablag&apos;</th>
-                      <th>Xaridor</th>
-                      <th>Sotuvchi</th>
-                      <th>Escrow Status</th>
-                      <th>Sana</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((o) => (
-                      <tr key={o.id}>
-                        <td className="mono-cell">{o.id}</td>
-                        <td className="name-bold">{o.listing?.title || "eFootball Akkaunt"}</td>
-                        <td className="price-cell">${o.price}</td>
-                        <td>{o.buyer?.full_name || "Xaridor"}</td>
-                        <td>{o.seller?.full_name || "Sotuvchi"}</td>
-                        <td>
-                          <span className="status-tag tag-approved">
-                            {o.status === "completed"
-                              ? "Yakunlangan"
-                              : o.status === "delivered"
-                              ? "Yetkazildi"
-                              : "To'langan (Escrow)"}
-                          </span>
-                        </td>
-                        <td className="date-cell">{formatDate(o.created_at)}</td>
+              <div className="admin-table-container">
+                <div className="table-responsive">
+                  <table className="admin-custom-table">
+                    <thead>
+                      <tr>
+                        <th>Buyurtma ID</th>
+                        <th>Akkount</th>
+                        <th>Summa</th>
+                        <th>Xaridor</th>
+                        <th>Sotuvchi</th>
+                        <th>Holati</th>
+                        <th>Sana</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {orders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="table-empty-td">
+                            Hozircha hech qanday buyurtma amalga oshirilmagan
+                          </td>
+                        </tr>
+                      ) : (
+                        orders.map((o) => (
+                          <tr key={o.id}>
+                            <td>
+                              <span className="order-id-badge">#{o.id.slice(0, 8)}</span>
+                            </td>
+                            <td className="listing-name-td">
+                              {o.listing?.title || "Akkount"}
+                            </td>
+                            <td className="amount-td">${o.price || 0}</td>
+                            <td>{o.buyer?.full_name || o.buyer?.email || "Xaridor"}</td>
+                            <td>{o.seller?.full_name || o.seller?.email || "Sotuvchi"}</td>
+                            <td>
+                              <span className={`order-status-tag status-${o.status}`}>
+                                {o.status === "completed"
+                                  ? "Yakunlangan"
+                                  : o.status === "confirmed"
+                                  ? "Tasdiqlangan"
+                                  : o.status === "paid"
+                                  ? "To'langan (Escrow)"
+                                  : o.status === "awaiting_delivery"
+                                  ? "Yetkazish kutilmoqda"
+                                  : o.status === "delivered"
+                                  ? "Yetkazildi"
+                                  : o.status === "disputed"
+                                  ? "Bahsli (Dispute)"
+                                  : "Qaytarilgan"}
+                              </span>
+                            </td>
+                            <td className="date-td">{formatDate(o.created_at)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      </div>
 
-      {/* ============================================================ */}
-      {/* REJECT MODAL WITH REASON */}
-      {/* ============================================================ */}
-      {rejectModalOpen && listingToReject && (
+      {/* Reject Modal */}
+      {rejectModalOpen && (
         <div className="modal-overlay animate-fade-in">
           <div className="modal-card animate-scale-up">
             <div className="modal-header-line">
               <div className="modal-title-group">
-                <XCircle size={22} className="text-rose" />
+                <XCircle size={20} className="text-rose" />
                 <h3 className="modal-heading">E&apos;lonni Rad Etish</h3>
               </div>
               <button
@@ -1379,14 +1566,14 @@ export default function AdminPage() {
             </div>
 
             <p className="modal-desc-text">
-              <strong>&quot;{listingToReject.title}&quot;</strong> e&apos;lonini rad etish sababini kiriting. Ushbu sabab foydalanuvchining shaxsiy profilida ko&apos;rsatiladi:
+              Sotuvchiga nima sababdan e&apos;lon rad etilganini bildiring:
             </p>
 
             <textarea
-              rows={4}
-              placeholder="masalan: Konami ID skrinshoti to'liq ko'rinmayapti yoki narx noto'g'ri kiritilgan..."
+              rows={3}
               value={rejectReasonInput}
               onChange={(e) => setRejectReasonInput(e.target.value)}
+              placeholder="Masalan: Skrinshotlar noaniq, OVR tasdiqlanmadi..."
               className="reject-reason-textarea"
             />
 
@@ -1396,203 +1583,376 @@ export default function AdminPage() {
                 onClick={() => setRejectModalOpen(false)}
                 className="btn-modal-cancel"
               >
-                Bekor Qilish
+                Bekor qilish
               </button>
               <button
                 type="button"
+                onClick={handleRejectListing}
                 disabled={actionProcessing}
-                onClick={handleConfirmReject}
                 className="btn-modal-confirm-reject"
               >
-                {actionProcessing ? "Rad etilmoqda..." : "Rad Etishni Tasdiqlash"}
+                {actionProcessing ? "Saqlanmoqda..." : "Rad etishni tasdiqlash"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Embedded High-End Admin Styles (AI izlarisiz, Zero border-maniya) */}
+      {/* Ultra-Premium Glassmorphic Styles */}
       <style>{`
-        .admin-root-layout {
+        .admin-dashboard-container {
+          display: flex;
           min-height: 100vh;
           background: #030712;
-          padding-bottom: 80px;
-        }
-        .admin-loading-view {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 16px;
-          color: rgba(156, 163, 175, 0.85);
-          font-size: 14px;
+          color: #F3F4F6;
+          font-family: 'Inter', -apple-system, sans-serif;
+          overflow-x: hidden;
         }
 
-        /* Top Bar */
-        .admin-header-nav {
-          background: rgba(8, 14, 30, 0.8);
-          backdrop-filter: blur(24px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-          position: sticky;
-          top: 0;
-          z-index: 90;
-        }
-        .admin-header-content {
+        /* Sidebar Styles */
+        .admin-sidebar {
+          width: 260px;
+          background: rgba(6, 11, 26, 0.98);
+          backdrop-filter: blur(32px);
+          -webkit-backdrop-filter: blur(32px);
+          border-right: 1px solid rgba(255, 255, 255, 0.07);
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 60px;
+          flex-direction: column;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 150;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .admin-brand-group {
+
+        .sidebar-brand-box {
           display: flex;
           align-items: center;
           gap: 12px;
+          padding: 20px 22px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .admin-back-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.05);
+        .brand-icon-pill {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(244, 63, 94, 0.12);
+          border: 1px solid rgba(244, 63, 94, 0.25);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(209, 213, 219, 0.85);
-          text-decoration: none;
-          transition: all 0.15s ease;
         }
-        .admin-back-btn:hover {
-          background: rgba(255, 255, 255, 0.1);
+        .brand-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .brand-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 800;
+          color: #FFF;
+          letter-spacing: -0.01em;
+        }
+        .brand-badge {
+          font-size: 9.5px;
+          font-weight: 800;
+          color: #FB7185;
+          letter-spacing: 0.08em;
+        }
+        .sidebar-close-mobile-btn {
+          display: none;
+          margin-left: auto;
+          background: none;
+          border: none;
+          color: #9CA3AF;
+          cursor: pointer;
+        }
+
+        .sidebar-admin-chip {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 16px 16px 10px 16px;
+          padding: 12px 14px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 14px;
+        }
+        .admin-avatar-bubble {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #E11D48, #BE123C);
+          color: #FFF;
+          font-weight: 800;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .admin-chip-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .chip-name {
+          font-size: 13px;
+          font-weight: 700;
           color: #FFF;
         }
-        .admin-tag-pill {
-          display: inline-flex;
+        .chip-status {
+          font-size: 11px;
+          color: #34D399;
+          display: flex;
           align-items: center;
-          gap: 6px;
-          background: rgba(244, 63, 94, 0.12);
-          color: #FB7185;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 999px;
+          gap: 5px;
+          font-weight: 600;
         }
-        .admin-header-actions {
+        .status-dot-pulse {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #34D399;
+          box-shadow: 0 0 8px #34D399;
+        }
+
+        .sidebar-nav {
+          flex: 1;
+          padding: 12px 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          overflow-y: auto;
+        }
+        .nav-group-label {
+          font-size: 10.5px;
+          font-weight: 700;
+          color: rgba(156, 163, 175, 0.6);
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          padding: 8px 12px 4px 12px;
+        }
+        .nav-tab-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 11px 14px;
+          border-radius: 12px;
+          color: rgba(209, 213, 219, 0.85);
+          font-size: 13.5px;
+          font-weight: 600;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+          text-align: left;
+          width: 100%;
+        }
+        .nav-tab-item:hover {
+          color: #FFF;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .nav-tab-item.active {
+          color: #FFF;
+          background: linear-gradient(135deg, rgba(225, 29, 72, 0.18) 0%, rgba(225, 29, 72, 0.08) 100%);
+          border: 1px solid rgba(244, 63, 94, 0.25);
+          font-weight: 700;
+        }
+        .nav-tab-item.active svg {
+          color: #FB7185;
+        }
+        .nav-icon-label {
           display: flex;
           align-items: center;
           gap: 10px;
         }
-        .admin-action-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(209, 213, 219, 0.9);
-          font-size: 12.5px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .admin-action-pill:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: #FFF;
-        }
-        .admin-logout-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          border-radius: 8px;
-          background: rgba(244, 63, 94, 0.1);
-          color: #FB7185;
-          font-size: 12.5px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .admin-logout-pill:hover {
-          background: rgba(244, 63, 94, 0.2);
-          color: #FFF;
-        }
-
-        /* Body */
-        .admin-main-body {
-          padding-top: 24px;
-        }
-
-        /* Tabs Bar */
-        .admin-nav-tabs-bar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          overflow-x: auto;
-          padding-bottom: 8px;
-          margin-bottom: 24px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .admin-tab-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 9px 16px;
-          border-radius: 10px;
-          background: transparent;
-          border: none;
-          color: rgba(156, 163, 175, 0.85);
-          font-size: 13.5px;
-          font-weight: 600;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: all 0.15s ease;
-        }
-        .admin-tab-btn:hover {
-          background: rgba(255, 255, 255, 0.04);
-          color: #FFF;
-        }
-        .admin-tab-btn.active {
-          background: rgba(244, 63, 94, 0.14);
-          color: #FB7185;
-        }
-        .tab-counter-badge {
-          background: #F43F5E;
+        .nav-counter-badge {
+          background: #E11D48;
           color: #FFF;
           font-size: 11px;
           font-weight: 800;
           padding: 2px 7px;
           border-radius: 999px;
         }
-        .tab-counter-badge.neutral {
-          background: rgba(255, 255, 255, 0.1);
-          color: rgba(209, 213, 219, 0.9);
+        .pulse-badge {
+          box-shadow: 0 0 10px rgba(225, 29, 72, 0.6);
+          animation: pulseAnim 2s infinite;
+        }
+        .nav-count-sub {
+          font-size: 11.5px;
+          color: rgba(156, 163, 175, 0.7);
+          font-weight: 600;
         }
 
-        /* KPI Cards */
-        .kpi-cards-grid {
+        .sidebar-footer-group {
+          padding: 14px 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .sidebar-store-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
+          border-radius: 10px;
+          color: rgba(209, 213, 219, 0.85);
+          font-size: 13px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.15s ease;
+        }
+        .sidebar-store-link:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #FFF;
+        }
+        .sidebar-logout-btn {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
+          border-radius: 10px;
+          color: #FB7185;
+          font-size: 13px;
+          font-weight: 600;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          width: 100%;
+          text-align: left;
+        }
+        .sidebar-logout-btn:hover {
+          background: rgba(244, 63, 94, 0.12);
+        }
+
+        /* Main Viewport */
+        .admin-main-viewport {
+          margin-left: 260px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          background: radial-gradient(circle at 50% 10%, rgba(244, 63, 94, 0.03) 0%, transparent 60%), #030712;
+        }
+
+        /* Topbar */
+        .admin-topbar {
+          height: 64px;
+          background: rgba(8, 14, 30, 0.7);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 0 28px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
+        .topbar-left {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .mobile-sidebar-toggle-btn {
+          display: none;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #FFF;
+          padding: 6px;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        .topbar-breadcrumbs {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13.5px;
+          font-weight: 600;
+        }
+        .breadcrumb-root { color: rgba(156, 163, 175, 0.8); }
+        .breadcrumb-sep { color: rgba(156, 163, 175, 0.4); }
+        .breadcrumb-current { color: #FFF; font-weight: 700; }
+
+        .topbar-right {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .connection-status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          color: #34D399;
+          font-size: 11.5px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 999px;
+        }
+        .status-live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #34D399;
+        }
+        .topbar-refresh-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #FFF;
+          font-size: 12.5px;
+          font-weight: 600;
+          padding: 6px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .topbar-refresh-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Content Area */
+        .admin-content-scroll {
+          padding: 28px;
+          flex: 1;
+        }
+        .tab-pane {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-          gap: 16px;
-          margin-bottom: 24px;
+          gap: 18px;
         }
-        .kpi-card {
-          background: rgba(10, 16, 32, 0.72);
+        .metric-card {
+          background: rgba(10, 17, 36, 0.85);
           backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.07);
-          border-radius: 18px;
-          padding: 20px;
+          border-radius: 20px;
+          padding: 22px;
           display: flex;
           align-items: flex-start;
           gap: 16px;
-          cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .kpi-card:hover {
-          background: rgba(255, 255, 255, 0.04);
+        .metric-card:hover {
           transform: translateY(-2px);
+          border-color: rgba(255, 255, 255, 0.14);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
         }
-        .kpi-icon-bubble {
+        .metric-icon-wrap {
           width: 48px;
           height: 48px;
           border-radius: 14px;
@@ -1601,240 +1961,214 @@ export default function AdminPage() {
           justify-content: center;
           flex-shrink: 0;
         }
-        .amber-bubble { background: rgba(245, 158, 11, 0.14); }
-        .emerald-bubble { background: rgba(16, 185, 129, 0.14); }
-        .blue-bubble { background: rgba(37, 99, 235, 0.14); }
-        .rose-bubble { background: rgba(244, 63, 94, 0.14); }
+        .bg-amber-soft { background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .bg-blue-soft { background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.2); }
+        .bg-purple-soft { background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.2); }
+        .bg-emerald-soft { background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2); }
 
-        .kpi-details {
+        .metric-data {
           display: flex;
           flex-direction: column;
+          gap: 3px;
         }
-        .kpi-title {
-          font-size: 12.5px;
-          color: rgba(156, 163, 175, 0.85);
+        .metric-label {
+          font-size: 12px;
           font-weight: 600;
+          color: rgba(156, 163, 175, 0.85);
         }
-        .kpi-number {
+        .metric-value-row {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
+        }
+        .metric-number {
           font-family: 'Outfit', sans-serif;
-          font-size: 22px;
+          font-size: 26px;
           font-weight: 800;
           color: #FFF;
-          margin: 3px 0 2px 0;
+          line-height: 1.1;
         }
-        .kpi-subtext {
+        .metric-unit {
+          font-size: 12px;
+          color: rgba(156, 163, 175, 0.7);
+          font-weight: 600;
+        }
+        .metric-sub-hint {
           font-size: 11.5px;
-          color: rgba(156, 163, 175, 0.65);
+          color: rgba(156, 163, 175, 0.6);
+          margin-top: 2px;
         }
 
-        /* Moderation Banner */
-        .moderation-alert-banner {
-          background: rgba(245, 158, 11, 0.08);
-          border: 1px solid rgba(245, 158, 11, 0.25);
-          border-radius: 18px;
-          padding: 20px 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-        .alert-banner-left {
-          display: flex;
-          align-items: flex-start;
-          gap: 14px;
-          max-width: 720px;
-        }
-        .pulse-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #FBBF24;
-          margin-top: 5px;
-          box-shadow: 0 0 12px #FBBF24;
-          flex-shrink: 0;
-        }
-        .alert-heading {
-          font-family: 'Outfit', sans-serif;
-          font-size: 16px;
-          font-weight: 700;
-          color: #FFF;
-          margin: 0 0 4px 0;
-        }
-        .alert-sub {
-          font-size: 13px;
-          color: rgba(209, 213, 219, 0.85);
-          line-height: 1.5;
-          margin: 0;
-        }
-        .alert-review-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 10px 18px;
-          border-radius: 10px;
-          background: #D97706;
-          color: #FFF;
-          font-size: 13.5px;
-          font-weight: 700;
-          border: none;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background 0.15s;
-        }
-        .alert-review-btn:hover {
-          background: #B45309;
-        }
-
-        /* Overview Summary Grid */
-        .overview-summary-grid {
+        /* Overview Split Layout */
+        .overview-split-layout {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+          grid-template-columns: 1.2fr 0.8fr;
           gap: 20px;
         }
-        .summary-panel-card {
-          background: rgba(10, 16, 32, 0.72);
+        .admin-surface-card {
+          background: rgba(10, 17, 36, 0.85);
           backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.07);
           border-radius: 20px;
           padding: 24px;
         }
-        .panel-header {
+        .card-header-flex {
           display: flex;
           align-items: center;
           justify-content: space-between;
           margin-bottom: 18px;
+          padding-bottom: 14px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .panel-title {
+        .header-title-box {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+        }
+        .card-section-title {
           font-family: 'Outfit', sans-serif;
           font-size: 16px;
           font-weight: 700;
           color: #FFF;
           margin: 0;
         }
-        .panel-link-btn {
+        .card-action-link {
           background: none;
           border: none;
           color: #60A5FA;
           font-size: 12.5px;
           font-weight: 600;
-          cursor: pointer;
           display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 5px;
+          cursor: pointer;
         }
 
-        .empty-mini-box {
+        .empty-overview-box {
           text-align: center;
-          padding: 30px;
+          padding: 36px 16px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 10px;
-          color: rgba(156, 163, 175, 0.8);
-          font-size: 13px;
+          gap: 8px;
         }
-        .mini-submissions-list {
+        .empty-title {
+          font-size: 15px;
+          font-weight: 700;
+          color: #FFF;
+          margin: 0;
+        }
+        .empty-sub {
+          font-size: 12.5px;
+          color: rgba(156, 163, 175, 0.7);
+        }
+
+        .quick-moderation-list {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
         }
-        .mini-sub-item {
+        .quick-mod-item {
           background: rgba(255, 255, 255, 0.03);
-          border-radius: 12px;
-          padding: 12px 14px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 14px;
+          padding: 14px 16px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
+          gap: 14px;
         }
-        .mini-sub-info {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          min-width: 0;
-        }
-        .mini-sub-title {
-          font-size: 13px;
+        .quick-mod-title {
+          font-size: 14px;
           font-weight: 700;
           color: #FFF;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          margin-bottom: 4px;
         }
-        .mini-sub-meta {
+        .quick-mod-meta {
           display: flex;
           align-items: center;
           gap: 8px;
           font-size: 11.5px;
+          margin-bottom: 4px;
         }
-        .badge-platform {
+        .platform-tag {
           background: rgba(255, 255, 255, 0.06);
-          padding: 1px 6px;
-          border-radius: 4px;
-          color: rgba(209, 213, 219, 0.85);
+          padding: 2px 7px;
+          border-radius: 6px;
+          font-weight: 600;
         }
-        .badge-price {
+        .ovr-tag {
+          background: rgba(37, 99, 235, 0.15);
           color: #60A5FA;
           font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 6px;
         }
-        .meta-author {
-          color: rgba(156, 163, 175, 0.7);
+        .price-tag {
+          color: #34D399;
+          font-weight: 700;
+          font-size: 13px;
         }
-        .mini-actions {
+        .quick-mod-seller {
+          font-size: 11.5px;
+          color: rgba(156, 163, 175, 0.8);
+        }
+        .quick-mod-actions {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           flex-shrink: 0;
         }
         .btn-quick-approve {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 6px 10px;
-          border-radius: 6px;
-          background: rgba(16, 185, 129, 0.14);
-          color: #34D399;
-          font-size: 11.5px;
+          gap: 5px;
+          padding: 8px 12px;
+          border-radius: 8px;
+          background: #059669;
+          color: #FFF;
+          font-size: 12px;
           font-weight: 700;
           border: none;
           cursor: pointer;
+          transition: background 0.15s ease;
         }
-        .btn-quick-approve:hover { background: rgba(16, 185, 129, 0.25); }
+        .btn-quick-approve:hover { background: #047857; }
         .btn-quick-reject {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 6px 10px;
-          border-radius: 6px;
-          background: rgba(244, 63, 94, 0.14);
+          gap: 5px;
+          padding: 8px 12px;
+          border-radius: 8px;
+          background: rgba(244, 63, 94, 0.12);
           color: #FB7185;
-          font-size: 11.5px;
+          font-size: 12px;
           font-weight: 700;
           border: none;
           cursor: pointer;
+          transition: all 0.15s ease;
         }
-        .btn-quick-reject:hover { background: rgba(244, 63, 94, 0.25); }
+        .btn-quick-reject:hover { background: rgba(244, 63, 94, 0.25); color: #FFF; }
 
-        /* Roles breakdown list */
-        .roles-breakdown-list {
+        /* Role Distribution */
+        .role-distribution-list {
           display: flex;
           flex-direction: column;
           gap: 12px;
         }
-        .role-stat-item {
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 12px;
-          padding: 14px 16px;
+        .role-stat-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 12px 14px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          border-radius: 12px;
         }
-        .role-stat-left {
+        .role-stat-info {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
         .role-dot {
           width: 10px;
@@ -1842,300 +2176,298 @@ export default function AdminPage() {
           border-radius: 50%;
           flex-shrink: 0;
         }
-        .role-dot-buyer { background: #60A5FA; }
-        .role-dot-seller { background: #34D399; }
-        .role-dot-admin { background: #FB7185; }
-
+        .dot-buyer { background: #2563EB; box-shadow: 0 0 8px #2563EB; }
+        .dot-seller { background: #10B981; box-shadow: 0 0 8px #10B981; }
+        .dot-admin { background: #E11D48; box-shadow: 0 0 8px #E11D48; }
         .role-stat-name {
-          font-size: 13.5px;
+          font-size: 13px;
           font-weight: 700;
           color: #FFF;
         }
-        .role-stat-desc {
-          font-size: 11.5px;
+        .role-stat-sub {
+          font-size: 11px;
           color: rgba(156, 163, 175, 0.7);
         }
         .role-stat-count {
-          font-family: 'Outfit', sans-serif;
-          font-size: 15px;
+          font-size: 13.5px;
           font-weight: 800;
           color: #FFF;
         }
 
-        /* Tab Header Row */
-        .tab-header-row {
+        /* Pane Header & Badges */
+        .pane-header-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-wrap: wrap;
           gap: 16px;
-          margin-bottom: 20px;
         }
-        .tab-heading {
+        .pane-main-title {
           font-family: 'Outfit', sans-serif;
           font-size: 20px;
           font-weight: 800;
           color: #FFF;
           margin: 0 0 4px 0;
         }
-        .tab-sub {
+        .pane-sub-desc {
           font-size: 13px;
           color: rgba(156, 163, 175, 0.85);
           margin: 0;
         }
+        .pane-counter-badge {
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.25);
+          color: #FBBF24;
+          font-size: 12.5px;
+          font-weight: 700;
+          padding: 6px 14px;
+          border-radius: 999px;
+        }
 
-        /* Moderation Cards */
-        .moderation-cards-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
+        /* Moderation Cards Grid */
+        .moderation-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+          gap: 20px;
         }
         .moderation-card {
-          background: rgba(10, 16, 32, 0.72);
+          background: rgba(10, 17, 36, 0.85);
           backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
-          padding: 24px;
+          padding: 22px;
           display: flex;
           flex-direction: column;
-          gap: 18px;
+          gap: 14px;
         }
-        .mod-header-line {
+        .mod-card-top {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 10px;
         }
-        .mod-title-wrap {
+        .mod-card-badges {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 8px;
         }
-        .mod-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 17px;
-          font-weight: 800;
-          color: #FFF;
-        }
-        .mod-price {
-          font-size: 16px;
-          font-weight: 800;
-          color: #60A5FA;
-        }
-        .mod-pending-badge {
+        .pending-status-tag {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          background: rgba(245, 158, 11, 0.14);
+          gap: 4px;
+          background: rgba(245, 158, 11, 0.12);
           color: #FBBF24;
-          font-size: 11.5px;
+          font-size: 11px;
           font-weight: 700;
-          padding: 3px 9px;
-          border-radius: 999px;
+          padding: 2px 7px;
+          border-radius: 6px;
         }
-        .mod-meta-pills {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
+        .mod-card-price {
+          font-family: 'Outfit', sans-serif;
+          font-size: 20px;
+          font-weight: 800;
+          color: #34D399;
+        }
+        .mod-card-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 17px;
+          font-weight: 700;
+          color: #FFF;
+          margin: 0;
+        }
+        .mod-card-stats-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
           gap: 8px;
-          margin-top: 10px;
         }
-        .mod-pill {
-          background: rgba(255, 255, 255, 0.04);
-          padding: 4px 10px;
+        .stat-pill {
+          background: rgba(255, 255, 255, 0.03);
           border-radius: 8px;
-          font-size: 12.5px;
-          color: rgba(209, 213, 219, 0.9);
-        }
-        .mod-players-row {
+          padding: 6px 10px;
           display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 12px;
+          flex-direction: column;
+          gap: 2px;
         }
-        .players-label {
-          font-size: 12.5px;
-          font-weight: 600;
-          color: rgba(156, 163, 175, 0.85);
-        }
-        .players-tags {
+        .stat-name { font-size: 10.5px; color: rgba(156, 163, 175, 0.7); }
+        .stat-val { font-size: 12.5px; font-weight: 700; color: #FFF; }
+
+        .mod-players-box {
           display: flex;
-          align-items: center;
-          flex-wrap: wrap;
+          flex-direction: column;
           gap: 6px;
         }
-        .player-tag {
-          background: rgba(37, 99, 235, 0.12);
+        .players-label { font-size: 11.5px; font-weight: 600; color: rgba(156, 163, 175, 0.8); }
+        .player-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .player-chip {
+          background: rgba(37, 99, 235, 0.14);
           color: #93C5FD;
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 600;
           padding: 2px 8px;
           border-radius: 6px;
         }
-        .mod-desc-box {
-          margin-top: 12px;
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 10px;
-          padding: 10px 14px;
-          font-size: 13px;
-          color: rgba(209, 213, 219, 0.85);
-          line-height: 1.5;
-        }
-        .desc-label {
-          font-weight: 700;
-          color: rgba(156, 163, 175, 0.9);
-        }
-        .mod-seller-info {
-          margin-top: 14px;
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-        .seller-info-title {
+
+        .mod-desc-quote {
           font-size: 12.5px;
-          font-weight: 600;
-          color: rgba(156, 163, 175, 0.85);
-        }
-        .seller-contact-chips {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .contact-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 3px 9px;
-          border-radius: 6px;
-          font-size: 12px;
-          color: #FFF;
-        }
-        .highlight-chip {
-          background: rgba(37, 99, 235, 0.15);
-          color: #60A5FA;
+          color: rgba(209, 213, 219, 0.85);
+          font-style: italic;
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 8px;
+          padding: 8px 12px;
         }
 
-        .moderation-card-actions {
+        .mod-seller-footer {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          justify-content: space-between;
+          padding-top: 10px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .btn-approve-action {
-          display: inline-flex;
+        .seller-profile-wrap {
+          display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 10px 20px;
+          gap: 10px;
+        }
+        .seller-sm-avatar {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: #10B981;
+          color: #FFF;
+          font-weight: 800;
+          font-size: 13px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .seller-sm-name { font-size: 12.5px; font-weight: 700; color: #FFF; }
+        .seller-tg-link { font-size: 11.5px; color: #60A5FA; text-decoration: none; }
+
+        .mod-action-buttons {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 10px;
+          margin-top: 6px;
+        }
+        .btn-mod-approve {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 10px 14px;
           border-radius: 10px;
           background: #059669;
           color: #FFF;
-          font-size: 13.5px;
+          font-size: 12.5px;
           font-weight: 700;
           border: none;
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: background 0.15s ease;
         }
-        .btn-approve-action:hover {
-          background: #047857;
-          transform: translateY(-1px);
-        }
-        .btn-reject-action {
-          display: inline-flex;
+        .btn-mod-approve:hover { background: #047857; }
+        .btn-mod-reject {
+          display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 10px 18px;
+          justify-content: center;
+          gap: 6px;
+          padding: 10px 14px;
           border-radius: 10px;
           background: rgba(244, 63, 94, 0.12);
           color: #FB7185;
-          font-size: 13.5px;
+          font-size: 12.5px;
           font-weight: 700;
           border: none;
           cursor: pointer;
           transition: all 0.15s ease;
         }
-        .btn-reject-action:hover {
-          background: rgba(244, 63, 94, 0.22);
-          color: #FFF;
-        }
+        .btn-mod-reject:hover { background: rgba(244, 63, 94, 0.22); color: #FFF; }
 
-        /* Tables & Filters */
-        .tab-filters-row {
+        /* Toolbar & Tables */
+        .table-toolbar {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           flex-wrap: wrap;
         }
-        .search-input-wrap {
+        .search-box {
+          position: relative;
+          display: flex;
+          align-items: center;
+          flex: 1;
+          min-width: 260px;
+        }
+        .search-icon {
+          position: absolute;
+          left: 14px;
+          color: rgba(156, 163, 175, 0.6);
+        }
+        .toolbar-search-input {
+          width: 100%;
+          background: rgba(10, 17, 36, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          padding: 10px 14px 10px 38px;
+          font-size: 13px;
+          color: #FFF;
+          outline: none;
+        }
+        .filter-select-box {
           position: relative;
           display: flex;
           align-items: center;
         }
-        .search-icon {
+        .filter-icon {
           position: absolute;
           left: 12px;
-          color: rgba(156, 163, 175, 0.7);
+          color: rgba(156, 163, 175, 0.6);
         }
-        .admin-search-input {
-          background: rgba(255, 255, 255, 0.04);
+        .toolbar-select {
+          background: rgba(10, 17, 36, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 9px;
-          padding: 8px 12px 8px 34px;
-          font-size: 13px;
-          color: #FFF;
-          outline: none;
-          min-width: 240px;
-        }
-        .admin-select-filter {
-          background: rgba(10, 16, 32, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 9px;
-          padding: 8px 12px;
+          border-radius: 12px;
+          padding: 10px 14px 10px 34px;
           font-size: 13px;
           color: #FFF;
           outline: none;
         }
 
-        .admin-table-card {
-          background: rgba(10, 16, 32, 0.72);
+        .admin-table-container {
+          background: rgba(10, 17, 36, 0.85);
           backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.07);
           border-radius: 20px;
-          padding: 16px;
+          overflow: hidden;
         }
-        .table-responsive {
-          overflow-x: auto;
-        }
-        .admin-data-table {
+        .table-responsive { overflow-x: auto; }
+        .admin-custom-table {
           width: 100%;
           border-collapse: collapse;
           font-size: 13px;
         }
-        .admin-data-table th {
+        .admin-custom-table th {
           text-align: left;
-          padding: 10px 14px;
+          padding: 14px 18px;
           color: rgba(156, 163, 175, 0.8);
           font-weight: 600;
           font-size: 12px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.01);
         }
-        .admin-data-table td {
-          padding: 12px 14px;
+        .admin-custom-table td {
+          padding: 14px 18px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.04);
           color: #FFF;
         }
+        .table-empty-td {
+          text-align: center;
+          padding: 36px !important;
+          color: rgba(156, 163, 175, 0.7);
+        }
 
-        .user-table-cell {
+        .user-cell-flex {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
         }
-        .user-table-avatar {
+        .user-table-av {
           width: 32px;
           height: 32px;
           border-radius: 50%;
@@ -2149,33 +2481,33 @@ export default function AdminPage() {
         .av-buyer { background: #2563EB; }
         .av-seller { background: #059669; }
         .av-admin { background: #E11D48; }
+        .table-user-name { font-weight: 700; color: #FFF; }
+        .table-user-id { font-size: 11px; color: rgba(156, 163, 175, 0.6); }
+        .email-td { color: rgba(209, 213, 219, 0.85); }
+        .table-tg-link { color: #60A5FA; text-decoration: none; font-weight: 600; }
 
-        .user-cell-name { font-weight: 700; color: #FFF; }
-        .user-cell-tg { font-size: 11px; color: #60A5FA; }
-        .email-cell { color: rgba(156, 163, 175, 0.9); }
-
-        .role-badge-pill {
-          padding: 3px 8px;
+        .role-pill {
+          padding: 3px 9px;
           border-radius: 6px;
-          font-weight: 700;
           font-size: 11px;
+          font-weight: 700;
         }
         .role-buyer { background: rgba(37, 99, 235, 0.14); color: #60A5FA; }
         .role-seller { background: rgba(16, 185, 129, 0.14); color: #34D399; }
         .role-admin { background: rgba(244, 63, 94, 0.14); color: #FB7185; }
 
-        .status-tag {
+        .seller-status-tag {
           padding: 2px 7px;
           border-radius: 5px;
           font-size: 11px;
           font-weight: 600;
         }
-        .tag-approved { background: rgba(16, 185, 129, 0.14); color: #34D399; }
-        .tag-pending { background: rgba(245, 158, 11, 0.14); color: #FBBF24; }
-        .tag-rejected { background: rgba(244, 63, 94, 0.14); color: #FB7185; }
-        .tag-none { background: rgba(255, 255, 255, 0.05); color: rgba(156, 163, 175, 0.7); }
+        .status-approved { background: rgba(16, 185, 129, 0.14); color: #34D399; }
+        .status-pending { background: rgba(245, 158, 11, 0.14); color: #FBBF24; }
+        .status-rejected { background: rgba(244, 63, 94, 0.14); color: #FB7185; }
+        .status-none { color: rgba(156, 163, 175, 0.5); }
 
-        .role-switch-actions {
+        .role-switch-btn-group {
           display: flex;
           align-items: center;
           gap: 4px;
@@ -2196,16 +2528,36 @@ export default function AdminPage() {
         .active-seller { background: #059669 !important; color: #FFF !important; }
         .active-admin { background: #E11D48 !important; color: #FFF !important; }
 
-        /* Listing specific */
-        .listing-table-name .name-bold { font-weight: 700; color: #FFF; display: block; }
-        .listing-table-name .sub-ovr { font-size: 11px; color: #60A5FA; }
-        .platform-tag {
-          background: rgba(255, 255, 255, 0.05);
-          padding: 2px 6px;
-          border-radius: 4px;
+        .table-listing-cell { display: flex; flex-direction: column; gap: 2px; }
+        .listing-bold-title { font-weight: 700; color: #FFF; }
+        .listing-date { font-size: 11px; color: rgba(156, 163, 175, 0.6); }
+        .ovr-price-cell { display: flex; align-items: center; gap: 6px; }
+        .table-ovr-badge { background: rgba(37, 99, 235, 0.15); color: #60A5FA; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11.5px; }
+        .table-price-badge { color: #34D399; font-weight: 700; font-size: 12.5px; }
+        .table-seller-name { font-size: 12.5px; color: rgba(209, 213, 219, 0.9); }
+
+        .listing-status-tag {
+          padding: 2px 7px;
+          border-radius: 5px;
           font-size: 11.5px;
+          font-weight: 600;
         }
-        .btn-toggle-remove {
+        .status-active { background: rgba(16, 185, 129, 0.14); color: #34D399; }
+        .status-pending_review { background: rgba(245, 158, 11, 0.14); color: #FBBF24; }
+        .status-sold { background: rgba(37, 99, 235, 0.14); color: #60A5FA; }
+
+        .table-actions-cell { display: flex; align-items: center; gap: 8px; }
+        .btn-table-view {
+          padding: 6px;
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          color: #FFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+        }
+        .btn-toggle-deactivate {
           background: rgba(244, 63, 94, 0.1);
           color: #FB7185;
           border: none;
@@ -2215,7 +2567,7 @@ export default function AdminPage() {
           font-weight: 600;
           cursor: pointer;
         }
-        .btn-toggle-active {
+        .btn-toggle-activate {
           background: rgba(16, 185, 129, 0.1);
           color: #34D399;
           border: none;
@@ -2226,7 +2578,19 @@ export default function AdminPage() {
           cursor: pointer;
         }
 
-        /* Reject Modal */
+        .order-id-badge {
+          font-family: monospace;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 11.5px;
+        }
+        .listing-name-td { font-weight: 600; }
+        .amount-td { font-weight: 700; color: #34D399; }
+        .order-status-tag { padding: 2px 7px; border-radius: 5px; font-size: 11.5px; font-weight: 600; }
+        .date-td { font-size: 11.5px; color: rgba(156, 163, 175, 0.7); }
+
+        /* Modal Overlay */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -2243,20 +2607,16 @@ export default function AdminPage() {
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 22px;
           padding: 28px;
-          max-width: 500px;
+          max-width: 480px;
           width: 100%;
         }
         .modal-header-line {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
-        .modal-title-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
+        .modal-title-group { display: flex; align-items: center; gap: 8px; }
         .modal-heading {
           font-family: 'Outfit', sans-serif;
           font-size: 18px;
@@ -2264,24 +2624,19 @@ export default function AdminPage() {
           color: #FFF;
           margin: 0;
         }
-        .modal-btn-close {
-          background: none;
-          border: none;
-          color: rgba(156, 163, 175, 0.8);
-          cursor: pointer;
-        }
+        .modal-btn-close { background: none; border: none; color: #9CA3AF; cursor: pointer; }
         .modal-desc-text {
           font-size: 13.5px;
           color: rgba(209, 213, 219, 0.85);
-          line-height: 1.55;
+          line-height: 1.5;
           margin: 0 0 14px 0;
         }
         .reject-reason-textarea {
           width: 100%;
           background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-          padding: 10px 12px;
+          border-radius: 12px;
+          padding: 12px;
           font-size: 13.5px;
           color: #FFF;
           outline: none;
@@ -2297,7 +2652,7 @@ export default function AdminPage() {
         }
         .btn-modal-cancel {
           padding: 9px 16px;
-          border-radius: 8px;
+          border-radius: 10px;
           background: rgba(255, 255, 255, 0.06);
           color: #FFF;
           font-size: 13px;
@@ -2307,7 +2662,7 @@ export default function AdminPage() {
         }
         .btn-modal-confirm-reject {
           padding: 9px 18px;
-          border-radius: 8px;
+          border-radius: 10px;
           background: #E11D48;
           color: #FFF;
           font-size: 13px;
@@ -2316,35 +2671,59 @@ export default function AdminPage() {
           cursor: pointer;
         }
 
+        /* Utilities */
         .text-rose { color: #FB7185; }
         .text-amber { color: #FBBF24; }
         .text-emerald { color: #34D399; }
         .text-blue { color: #60A5FA; }
+        .text-purple { color: #C084FC; }
+        .text-muted { color: rgba(156, 163, 175, 0.6); }
+        .cursor-pointer { cursor: pointer; }
+        .ml-auto { margin-left: auto; }
 
-        .empty-state-card {
-          text-align: center;
-          padding: 48px 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 12px;
-          background: rgba(10, 16, 32, 0.72);
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .empty-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 18px;
-          font-weight: 700;
-          color: #FFF;
-          margin: 0;
-        }
-        .empty-sub {
-          font-size: 13.5px;
-          color: rgba(156, 163, 175, 0.85);
-          margin: 0;
+        /* Responsive */
+        @media (max-width: 900px) {
+          .admin-sidebar {
+            transform: translateX(-100%);
+          }
+          .admin-sidebar.open {
+            transform: translateX(0);
+          }
+          .admin-sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 140;
+          }
+          .admin-main-viewport {
+            margin-left: 0;
+          }
+          .mobile-sidebar-toggle-btn {
+            display: flex;
+          }
+          .sidebar-close-mobile-btn {
+            display: flex;
+          }
+          .overview-split-layout {
+            grid-template-columns: 1fr;
+          }
+          .hidden-mobile-btn {
+            display: none;
+          }
         }
 
+        @keyframes pulseAnim {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
         @keyframes scaleUp {
           from { opacity: 0; transform: scale(0.96); }
           to { opacity: 1; transform: scale(1); }
