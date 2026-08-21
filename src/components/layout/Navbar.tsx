@@ -235,25 +235,14 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="user-profile-trigger"
+                    className="user-profile-avatar-btn"
                     aria-expanded={userDropdownOpen}
+                    aria-label={`${displayName} hisobi`}
                   >
-                    <div className="trigger-avatar-wrap">
-                      <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
-                        {displayName.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="trigger-online-dot" />
+                    <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
+                      {displayName.charAt(0).toUpperCase()}
                     </div>
-
-                    <div className="user-name-text">
-                      <span className="name">{displayName}</span>
-                    </div>
-
-                    <span className={`trigger-role-tag ${isSuperAdmin ? "role-admin" : isSeller ? "role-seller" : "role-buyer"}`}>
-                      {isSuperAdmin ? "Admin" : isSeller ? "Sotuvchi" : "Xaridor"}
-                    </span>
-
-                    <ChevronDown size={13} className={`chevron ${userDropdownOpen ? "rotated" : ""}`} />
+                    <span className="trigger-online-dot" />
                   </button>
 
                   {/* Profile Dropdown Menu */}
@@ -730,43 +719,37 @@ export function Navbar() {
         .user-profile-menu {
           position: relative;
         }
-        .user-profile-trigger {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          padding: 5px 10px 5px 6px;
+        .user-profile-avatar-btn {
+          position: relative;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: transparent;
+          border: 2px solid rgba(255, 255, 255, 0.12);
+          padding: 0;
+          cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 8px;
-          cursor: pointer;
+          justify-content: center;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .user-profile-trigger:hover {
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(255, 255, 255, 0.16);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        .user-profile-avatar-btn:hover {
+          border-color: #3B82F6;
+          transform: scale(1.06);
+          box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
         }
-        .trigger-avatar-wrap {
-          position: relative;
-          width: 28px;
-          height: 28px;
-          flex-shrink: 0;
-        }
-        .avatar-bubble {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
+        .user-profile-avatar-btn .avatar-bubble {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #FFF;
           font-weight: 800;
-          font-size: 12px;
+          font-size: 14px;
           font-family: 'Outfit', sans-serif;
-          flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
         }
         .avatar-bubble.buyer-avatar {
           background: linear-gradient(135deg, #2563EB, #1D4ED8);
@@ -779,49 +762,14 @@ export function Navbar() {
         }
         .trigger-online-dot {
           position: absolute;
-          bottom: -1px;
-          right: -1px;
-          width: 7px;
-          height: 7px;
+          bottom: 0px;
+          right: 0px;
+          width: 9px;
+          height: 9px;
           border-radius: 50%;
           background: #10B981;
-          border: 1.5px solid #030712;
-        }
-        .user-name-text {
-          display: flex;
-          align-items: center;
-        }
-        .user-name-text .name {
-          font-size: 13px;
-          font-weight: 700;
-          color: #FFF;
-          max-width: 100px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          letter-spacing: -0.01em;
-        }
-        .trigger-role-tag {
-          font-size: 10px;
-          font-weight: 700;
-          padding: 2px 6px;
-          border-radius: 6px;
-          letter-spacing: 0.02em;
-        }
-        .trigger-role-tag.role-admin {
-          background: rgba(244, 63, 94, 0.12);
-          border: 1px solid rgba(244, 63, 94, 0.25);
-          color: #FB7185;
-        }
-        .trigger-role-tag.role-seller {
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.25);
-          color: #34D399;
-        }
-        .trigger-role-tag.role-buyer {
-          background: rgba(37, 99, 235, 0.12);
-          border: 1px solid rgba(37, 99, 235, 0.25);
-          color: #60A5FA;
+          border: 2px solid #030712;
+          box-shadow: 0 0 6px #10B981;
         }
 
         /* Profile Dropdown Panel */
