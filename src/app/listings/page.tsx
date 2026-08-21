@@ -202,29 +202,74 @@ export default async function ListingsPage({
           </div>
         </div>
 
-        {/* 4. Filter & Search Controls Bar */}
-        <div className="g2g-filter-controls-bar">
-          <div className="filter-search-wrap">
-            <form action="/listings" method="GET" className="search-form-flex">
-              <Search size={16} className="search-icon" />
-              <input
-                type="text"
-                name="search"
-                defaultValue={params.search || ""}
-                placeholder="E'lonlar va o'yinchilar bo'yicha qidirish (masalan: Messi, 3200 OVR)..."
-                className="g2g-search-input"
-              />
-              {params.platform && <input type="hidden" name="platform" value={params.platform} />}
-              {params.sort && <input type="hidden" name="sort" value={params.sort} />}
-            </form>
-          </div>
+        {/* 4. Clean Search Input & Dynamic Active Filter Tags */}
+        <div className="search-bar-clean-wrap">
+          <form action="/listings" method="GET" className="search-input-pill">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              name="search"
+              defaultValue={params.search || ""}
+              placeholder="E'lonlar va o'yinchilar bo'yicha qidirish (masalan: Messi, 3200 OVR)..."
+              className="search-input-field"
+            />
+            {params.platform && <input type="hidden" name="platform" value={params.platform} />}
+            {params.sort && <input type="hidden" name="sort" value={params.sort} />}
+          </form>
 
-          <div className="filter-summary-row">
-            <div className="active-tag-chip">
-              <span>Brend: <strong>eFootball</strong></span>
-              <Link href="/listings" className="tag-clear-btn">×</Link>
+          {/* Dynamic Active Filters Row (only if user actually filtered) */}
+          <div className="active-filters-live-row">
+            <div className="active-chips-list">
+              {params.search && (
+                <span className="live-filter-tag">
+                  Qidiruv: <strong>&quot;{params.search}&quot;</strong>
+                  <Link
+                    href={`/listings?${new URLSearchParams({
+                      ...(params.platform && { platform: params.platform }),
+                      ...(params.minPrice && { minPrice: params.minPrice }),
+                      ...(params.maxPrice && { maxPrice: params.maxPrice }),
+                      ...(params.sort && { sort: params.sort }),
+                    }).toString()}`}
+                    className="tag-x-btn"
+                  >
+                    ×
+                  </Link>
+                </span>
+              )}
+              {params.platform && (
+                <span className="live-filter-tag">
+                  Platforma: <strong>{params.platform === "mobile" ? "Android/iOS" : params.platform.toUpperCase()}</strong>
+                  <Link
+                    href={`/listings?${new URLSearchParams({
+                      ...(params.search && { search: params.search }),
+                      ...(params.minPrice && { minPrice: params.minPrice }),
+                      ...(params.maxPrice && { maxPrice: params.maxPrice }),
+                      ...(params.sort && { sort: params.sort }),
+                    }).toString()}`}
+                    className="tag-x-btn"
+                  >
+                    ×
+                  </Link>
+                </span>
+              )}
+              {(params.minPrice || params.maxPrice) && (
+                <span className="live-filter-tag">
+                  Narx: <strong>${params.minPrice || "0"} - ${params.maxPrice || "∞"}</strong>
+                  <Link
+                    href={`/listings?${new URLSearchParams({
+                      ...(params.search && { search: params.search }),
+                      ...(params.platform && { platform: params.platform }),
+                      ...(params.sort && { sort: params.sort }),
+                    }).toString()}`}
+                    className="tag-x-btn"
+                  >
+                    ×
+                  </Link>
+                </span>
+              )}
             </div>
-            <span className="results-counter">
+
+            <span className="live-results-count">
               Jami <strong>{total}</strong> ta e&apos;lon topildi
             </span>
           </div>
@@ -569,31 +614,35 @@ export default async function ListingsPage({
           margin-top: 3px;
         }
 
-        /* 4. Filter & Search Controls Bar */
-        .g2g-filter-controls-bar {
-          background: rgba(14, 22, 42, 0.85);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 14px;
-          padding: 14px 20px;
+        /* 4. Clean Search Input & Dynamic Active Filter Tags */
+        .search-bar-clean-wrap {
           margin-bottom: 24px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
         }
 
-        .search-form-flex {
+        .search-input-pill {
           display: flex;
           align-items: center;
-          gap: 10px;
-          background: rgba(6, 11, 24, 0.85);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 10px;
-          padding: 8px 14px;
+          gap: 12px;
+          background: rgba(14, 22, 42, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 10px 16px;
+          transition: all 0.2s ease;
         }
+        .search-input-pill:focus-within {
+          border-color: #3B82F6;
+          box-shadow: 0 0 16px rgba(59, 130, 246, 0.25);
+        }
+
         .search-icon {
           color: rgba(156, 163, 175, 0.7);
+          flex-shrink: 0;
         }
-        .g2g-search-input {
+
+        .search-input-field {
           flex: 1;
           background: transparent;
           border: none;
@@ -601,34 +650,56 @@ export default async function ListingsPage({
           font-size: 13.5px;
           outline: none;
         }
-        .g2g-search-input::placeholder {
+        .search-input-field::placeholder {
           color: rgba(156, 163, 175, 0.5);
         }
 
-        .filter-summary-row {
+        .active-filters-live-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
           font-size: 12.5px;
-          color: rgba(156, 163, 175, 0.85);
+          color: rgba(156, 163, 175, 0.8);
+          padding: 0 4px;
         }
 
-        .active-tag-chip {
+        .active-chips-list {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .live-filter-tag {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(37, 99, 235, 0.15);
+          border: 1px solid rgba(59, 130, 246, 0.35);
+          color: #93C5FD;
+          font-size: 11.5px;
           padding: 3px 10px;
           border-radius: 6px;
-          color: #FFF;
-          font-size: 11.5px;
         }
-        .tag-clear-btn {
-          color: rgba(255, 255, 255, 0.6);
+
+        .tag-x-btn {
+          color: #FFF;
           text-decoration: none;
           font-size: 14px;
+          line-height: 1;
           margin-left: 2px;
+          opacity: 0.8;
+          transition: opacity 0.15s ease;
+        }
+        .tag-x-btn:hover {
+          opacity: 1;
+          color: #F87171;
+        }
+
+        .live-results-count {
+          font-size: 12.5px;
+          color: rgba(156, 163, 175, 0.75);
+          margin-left: auto;
         }
 
         /* 5. Main Catalog Layout */
