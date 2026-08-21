@@ -150,214 +150,216 @@ export function Navbar() {
     "Foydalanuvchi";
 
   return (
-    <header className="navbar-root">
-      {/* Top Utility & Trust Bar */}
-      <div className="navbar-top-bar">
-        <div className="container navbar-top-content">
-          <div className="trust-indicator">
-            <ShieldCheck size={14} className="text-emerald" />
-            <span>100% Escrow Xavfsiz To&apos;lov Kafolati</span>
-          </div>
-
-          <div className="top-right-group">
-            <span className="support-badge">
-              <Sparkles size={13} className="text-amber" /> 24/7 Qo&apos;llab-quvvatlash
-            </span>
-
-            {/* Currency Selector */}
-            <div className="currency-selector" ref={currencyRef}>
-              <button
-                type="button"
-                onClick={() => setCurrencyOpen(!currencyOpen)}
-                className="currency-btn"
-                aria-label="Valyutani tanlash"
-              >
-                <Globe size={13} className="text-blue" />
-                <span>{currency === "USD" ? "USD ($)" : "UZS (so'm)"}</span>
-                <ChevronDown size={12} className={`chevron ${currencyOpen ? "rotated" : ""}`} />
-              </button>
-
-              {currencyOpen && (
-                <div className="currency-dropdown animate-fade-in">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrency("USD");
-                      setCurrencyOpen(false);
-                    }}
-                    className={`dropdown-item ${currency === "USD" ? "active" : ""}`}
-                  >
-                    USD ($)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrency("UZS");
-                      setCurrencyOpen(false);
-                    }}
-                    className={`dropdown-item ${currency === "UZS" ? "active" : ""}`}
-                  >
-                    UZS (so&apos;m)
-                  </button>
-                </div>
-              )}
+    <>
+      <header className="navbar-root">
+        {/* Top Utility & Trust Bar */}
+        <div className="navbar-top-bar">
+          <div className="container navbar-top-content">
+            <div className="trust-indicator">
+              <ShieldCheck size={14} className="text-emerald" />
+              <span>100% Escrow Xavfsiz To&apos;lov Kafolati</span>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Main Navbar */}
-      <div className="container">
-        <div className="navbar-main">
-          {/* Logo */}
-          <Logo size="md" />
+            <div className="top-right-group">
+              <span className="support-badge">
+                <Sparkles size={13} className="text-amber" /> 24/7 Qo&apos;llab-quvvatlash
+              </span>
 
-          {/* Desktop Navigation Links */}
-          <nav className="desktop-nav hidden-mobile">
-            <Link href="/listings" className="nav-link">
-              <Gamepad2 size={16} className="nav-icon text-blue" />
-              <span>Akkauntlar</span>
-            </Link>
-
-            <div className="nav-link disabled" title="Tez kunda ishga tushadi">
-              <Trophy size={15} className="text-muted" />
-              <span>Turnirlar</span>
-              <span className="badge-coming-soon">Tez kunda</span>
-            </div>
-          </nav>
-
-          {/* User Auth Action Group */}
-          <div className="auth-action-group">
-            {user || isSuperAdmin ? (
-              /* Logged In User Pill Dropdown */
-              <div className="user-profile-menu" ref={dropdownRef}>
+              {/* Currency Selector */}
+              <div className="currency-selector" ref={currencyRef}>
                 <button
                   type="button"
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="user-profile-trigger"
-                  aria-expanded={userDropdownOpen}
+                  onClick={() => setCurrencyOpen(!currencyOpen)}
+                  className="currency-btn"
+                  aria-label="Valyutani tanlash"
                 >
-                  <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="user-name-text">
-                    <span className="name">{displayName}</span>
-                    <span className="role-sub">
-                      {isSuperAdmin ? "Admin" : isSeller ? "Sotuvchi" : "Xaridor"}
-                    </span>
-                  </div>
-                  <ChevronDown size={14} className={`chevron ${userDropdownOpen ? "rotated" : ""}`} />
+                  <Globe size={13} className="text-blue" />
+                  <span>{currency === "USD" ? "USD ($)" : "UZS (so'm)"}</span>
+                  <ChevronDown size={12} className={`chevron ${currencyOpen ? "rotated" : ""}`} />
                 </button>
 
-                {/* Profile Dropdown Menu */}
-                {userDropdownOpen && (
-                  <div className="profile-dropdown-panel animate-scale-up">
-                    <div className="dropdown-header">
-                      <div className="header-name">{displayName}</div>
-                      <div className="header-email">{user?.email || "admin@efzone.uz"}</div>
-                      <div className="header-badge-row">
-                        {isSuperAdmin ? (
-                          <span className="role-tag tag-admin">
-                            <ShieldAlert size={11} /> Platforma Admini
-                          </span>
-                        ) : isSeller ? (
-                          <span className="role-tag tag-seller">
-                            <BadgeCheck size={11} /> Tasdiqlangan Sotuvchi
-                          </span>
-                        ) : (
-                          <span className="role-tag tag-buyer">
-                            <User size={11} /> Oddiy Xaridor
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="dropdown-links">
-                      {/* Admin Links */}
-                      {isSuperAdmin && (
-                        <Link
-                          href="/admin"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="menu-item highlight-admin"
-                        >
-                          <ShieldAlert size={15} />
-                          <span>Admin Boshqaruv Paneli</span>
-                        </Link>
-                      )}
-
-                      {/* Seller Links */}
-                      {isSeller && (
-                        <Link
-                          href="/seller/dashboard"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="menu-item highlight-seller"
-                        >
-                          <LayoutDashboard size={15} />
-                          <span>Sotuvchi Kabineti</span>
-                        </Link>
-                      )}
-
-                      {/* Profile Link (for all) */}
-                      <Link
-                        href="/profile"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="menu-item"
-                      >
-                        <User size={15} />
-                        <span>Mening Profilim</span>
-                      </Link>
-
-                      {/* Buyer only: Akkaunt Sotish Ariza link */}
-                      {isBuyer && (
-                        <Link
-                          href="/seller/apply"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="menu-item highlight-apply"
-                        >
-                          <PlusCircle size={15} />
-                          <span>Akkaunt Sotish (Ariza)</span>
-                        </Link>
-                      )}
-                    </div>
-
-                    <div className="dropdown-footer">
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="logout-btn"
-                      >
-                        <LogOut size={14} /> Chiqish
-                      </button>
-                    </div>
+                {currencyOpen && (
+                  <div className="currency-dropdown animate-fade-in">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrency("USD");
+                        setCurrencyOpen(false);
+                      }}
+                      className={`dropdown-item ${currency === "USD" ? "active" : ""}`}
+                    >
+                      USD ($)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrency("UZS");
+                        setCurrencyOpen(false);
+                      }}
+                      className={`dropdown-item ${currency === "UZS" ? "active" : ""}`}
+                    >
+                      UZS (so&apos;m)
+                    </button>
                   </div>
                 )}
               </div>
-            ) : (
-              /* Logged Out / Guest CTAs */
-              <div className="guest-cta-group">
-                <Link href="/auth/login" className="login-link">
-                  Kirish
-                </Link>
-
-                <Link href="/auth/register" className="register-pill-btn">
-                  <span>Ro&apos;yxatdan O&apos;tish</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile Menu Toggle Button (Visible only on mobile/tablet) */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="mobile-hamburger-btn"
-              aria-label="Menyuni ochish"
-            >
-              <Menu size={22} />
-            </button>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Main Navbar */}
+        <div className="container">
+          <div className="navbar-main">
+            {/* Logo */}
+            <Logo size="md" />
+
+            {/* Desktop Navigation Links */}
+            <nav className="desktop-nav hidden-mobile">
+              <Link href="/listings" className="nav-link">
+                <Gamepad2 size={16} className="nav-icon text-blue" />
+                <span>Akkauntlar</span>
+              </Link>
+
+              <div className="nav-link disabled" title="Tez kunda ishga tushadi">
+                <Trophy size={15} className="text-muted" />
+                <span>Turnirlar</span>
+                <span className="badge-coming-soon">Tez kunda</span>
+              </div>
+            </nav>
+
+            {/* User Auth Action Group */}
+            <div className="auth-action-group">
+              {user || isSuperAdmin ? (
+                /* Logged In User Pill Dropdown */
+                <div className="user-profile-menu" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="user-profile-trigger"
+                    aria-expanded={userDropdownOpen}
+                  >
+                    <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="user-name-text">
+                      <span className="name">{displayName}</span>
+                      <span className="role-sub">
+                        {isSuperAdmin ? "Admin" : isSeller ? "Sotuvchi" : "Xaridor"}
+                      </span>
+                    </div>
+                    <ChevronDown size={14} className={`chevron ${userDropdownOpen ? "rotated" : ""}`} />
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {userDropdownOpen && (
+                    <div className="profile-dropdown-panel animate-scale-up">
+                      <div className="dropdown-header">
+                        <div className="header-name">{displayName}</div>
+                        <div className="header-email">{user?.email || "admin@efzone.uz"}</div>
+                        <div className="header-badge-row">
+                          {isSuperAdmin ? (
+                            <span className="role-tag tag-admin">
+                              <ShieldAlert size={11} /> Platforma Admini
+                            </span>
+                          ) : isSeller ? (
+                            <span className="role-tag tag-seller">
+                              <BadgeCheck size={11} /> Tasdiqlangan Sotuvchi
+                            </span>
+                          ) : (
+                            <span className="role-tag tag-buyer">
+                              <User size={11} /> Oddiy Xaridor
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="dropdown-links">
+                        {/* Admin Links */}
+                        {isSuperAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="menu-item highlight-admin"
+                          >
+                            <ShieldAlert size={15} />
+                            <span>Admin Boshqaruv Paneli</span>
+                          </Link>
+                        )}
+
+                        {/* Seller Links */}
+                        {isSeller && (
+                          <Link
+                            href="/seller/dashboard"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="menu-item highlight-seller"
+                          >
+                            <LayoutDashboard size={15} />
+                            <span>Sotuvchi Kabineti</span>
+                          </Link>
+                        )}
+
+                        {/* Profile Link (for all) */}
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="menu-item"
+                        >
+                          <User size={15} />
+                          <span>Mening Profilim</span>
+                        </Link>
+
+                        {/* Buyer only: Akkaunt Sotish Ariza link */}
+                        {isBuyer && (
+                          <Link
+                            href="/seller/apply"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="menu-item highlight-apply"
+                          >
+                            <PlusCircle size={15} />
+                            <span>Akkaunt Sotish (Ariza)</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      <div className="dropdown-footer">
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="logout-btn"
+                        >
+                          <LogOut size={14} /> Chiqish
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Logged Out / Guest CTAs */
+                <div className="guest-cta-group">
+                  <Link href="/auth/login" className="login-link">
+                    Kirish
+                  </Link>
+
+                  <Link href="/auth/register" className="register-pill-btn">
+                    <span>Ro&apos;yxatdan O&apos;tish</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              )}
+
+              {/* Mobile Menu Toggle Button (Visible only on mobile/tablet) */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="mobile-hamburger-btn"
+                aria-label="Menyuni ochish"
+              >
+                <Menu size={22} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Mobile Drawer Backdrop & Sidebar (Opens from Left, 80% width) */}
       <div
@@ -919,37 +921,40 @@ export function Navbar() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          z-index: 998;
+          width: 100vw;
+          height: 100vh;
+          height: 100dvh;
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          z-index: 9998;
           opacity: 0;
           pointer-events: none;
-          transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .mobile-backdrop.active {
           opacity: 1;
           pointer-events: auto;
         }
 
-        /* Mobile Sidebar Drawer (Opens from Left, 80% width) */
+        /* Mobile Sidebar Drawer (Opens from Left, 80% width, 100% height) */
         .mobile-sidebar-drawer {
           position: fixed;
           top: 0;
           left: 0;
           bottom: 0;
-          width: 80vw;
+          width: 82vw;
           max-width: 320px;
-          background: rgba(6, 11, 25, 0.98);
-          backdrop-filter: blur(32px);
-          -webkit-backdrop-filter: blur(32px);
-          border-right: 1px solid rgba(255, 255, 255, 0.08);
-          z-index: 999;
+          height: 100vh;
+          height: 100dvh;
+          background: #060B19;
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          z-index: 9999;
           display: flex;
           flex-direction: column;
-          box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
+          box-shadow: 20px 0 60px rgba(0, 0, 0, 0.9);
           transform: translateX(-100%);
-          transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
           overflow-y: auto;
         }
         .mobile-sidebar-drawer.open {
@@ -1184,7 +1189,7 @@ export function Navbar() {
           animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
-    </header>
+    </>
   );
 }
 
