@@ -59,15 +59,58 @@ export default async function ListingsPage({
 
   const totalPages = Math.ceil(total / perPage);
 
-  // Popular Game Brands Ribbon Data (like G2G.com)
+  // eFootball Platform & Price Category Ribbon Data (like G2G.com)
+  const currentPlatform = params.platform || "";
   const popularBrands = [
-    { name: "eFootball", watermark: "EFB", count: `${total > 0 ? total : 3700}+ e'lon`, active: true, link: "/listings" },
-    { name: "EA FC Mobile", watermark: "FUT", count: "8.1k e'lon", active: false, link: "/listings?search=EA" },
-    { name: "PlayStation Network", watermark: "PSN", count: "1.2k e'lon", active: false, link: "/listings?platform=ps" },
-    { name: "Clash of Clans", watermark: "COC", count: "20.6k e'lon", active: false, link: "#" },
-    { name: "Counter-Strike 2", watermark: "CS2", count: "6.3k e'lon", active: false, link: "#" },
-    { name: "Clash Royale", watermark: "CR", count: "7.2k e'lon", active: false, link: "#" },
-    { name: "Mobile Legends", watermark: "ML", count: "5.3k e'lon", active: false, link: "#" },
+    {
+      name: "Barchasi",
+      watermark: "ALL",
+      count: `${total} ta e'lon`,
+      active: !params.platform && !params.minPrice && !params.maxPrice,
+      link: "/listings",
+    },
+    {
+      name: "Android / iOS",
+      watermark: "MOB",
+      count: "Mobile versiya",
+      active: params.platform === "mobile",
+      link: "/listings?platform=mobile",
+    },
+    {
+      name: "Konsol (PS/Xbox)",
+      watermark: "PS5",
+      count: "PlayStation & Xbox",
+      active: params.platform === "ps" || params.platform === "xbox",
+      link: "/listings?platform=ps",
+    },
+    {
+      name: "Kompyuter (Steam)",
+      watermark: "PC",
+      count: "PC Steam",
+      active: params.platform === "pc",
+      link: "/listings?platform=pc",
+    },
+    {
+      name: "VIP Akkauntlar",
+      watermark: "VIP",
+      count: "$50+ & Top OVR",
+      active: params.minPrice === "50",
+      link: "/listings?minPrice=50&sort=rating",
+    },
+    {
+      name: "Tezkor Yetkazish",
+      watermark: "FAST",
+      count: "10-15 daqiqa",
+      active: params.sort === "newest" && !params.platform,
+      link: "/listings?sort=newest",
+    },
+    {
+      name: "Arzon Takliflar",
+      watermark: "SALE",
+      count: "$25 gacha",
+      active: params.maxPrice === "25",
+      link: "/listings?maxPrice=25&sort=price_asc",
+    },
   ];
 
   return (
@@ -290,7 +333,7 @@ export default async function ListingsPage({
 
       <style>{`
         .g2g-marketplace-root {
-          padding: 24px 0 80px 0;
+          padding: 104px 0 80px 0;
           min-height: 100vh;
         }
 
