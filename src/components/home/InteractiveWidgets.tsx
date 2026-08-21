@@ -248,16 +248,16 @@ export function TournamentsTeaser() {
           {/* Early Access Notification Form */}
           <div className="early-access-box">
             <div className="access-info-row">
-              <div className="access-icon-bubble">
-                <Bell size={18} className="text-amber" />
-              </div>
-              <div>
-                <div className="access-title">
-                  Turnirlar ochilishi bilan birinchi bo&apos;lib xabardor bo&apos;ling
+              <div className="access-title-wrapper">
+                <div className="access-title-header">
+                  <div className="access-icon-bubble">
+                    <Bell size={16} className="text-amber" />
+                  </div>
+                  <span className="access-title">Turnirlar ochilishidan xabardor bo&apos;ling</span>
                 </div>
-                <div className="access-sub">
-                  Telegram username yoki emailingizni qoldiring va ilk turnirga eksklyuziv taklifnoma oling
-                </div>
+                <p className="access-sub">
+                  Telegram username yoki emailingizni qoldiring va ilk turnirga eksklyuziv taklifnoma oling.
+                </p>
               </div>
             </div>
 
@@ -275,7 +275,7 @@ export function TournamentsTeaser() {
                   required
                   value={contactInput}
                   onChange={(e) => setContactInput(e.target.value)}
-                  placeholder="@telegram_username yoki emailingiz..."
+                  placeholder="@username yoki emailingiz..."
                   className="access-input"
                 />
                 <button
@@ -605,13 +605,18 @@ export function TournamentsTeaser() {
         }
         .access-info-row {
           display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .access-title-header {
+          display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 8px;
         }
         .access-icon-bubble {
-          width: 38px;
-          height: 38px;
-          border-radius: 10px;
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
           background: rgba(245, 158, 11, 0.15);
           border: 1px solid rgba(245, 158, 11, 0.3);
           display: flex;
@@ -620,14 +625,16 @@ export function TournamentsTeaser() {
           flex-shrink: 0;
         }
         .access-title {
-          font-size: 14px;
+          font-size: 14.5px;
           font-weight: 700;
           color: #FFF;
+          line-height: 1.3;
         }
         .access-sub {
           font-size: 12px;
-          color: rgba(209, 213, 219, 0.8);
-          margin-top: 2px;
+          color: rgba(209, 213, 219, 0.85);
+          margin: 0;
+          line-height: 1.45;
         }
         .access-form {
           display: flex;
@@ -709,22 +716,128 @@ export function TournamentsTeaser() {
         .text-emerald { color: #34D399; }
         .text-purple { color: #C084FC; }
 
-        @media (max-width: 860px) {
+        @media (max-width: 900px) {
           .tournaments-teaser-root {
-            padding: 28px 20px;
+            padding: 20px 14px;
+            border-radius: 20px;
+          }
+          .teaser-title {
+            font-size: 22px;
+          }
+          .teaser-subtitle {
+            font-size: 13px;
           }
           .teaser-main-card {
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          }
+          .teaser-tabs-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+          }
+          .column-title {
+            padding-left: 0;
+            margin-bottom: 2px;
+          }
+          .tabs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+          }
+          .tournament-tab-btn {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            box-sizing: border-box;
+          }
+          .tab-name {
+            font-size: 14px;
+          }
+          .tab-prize-row {
+            font-size: 12px;
+          }
+          .detail-top-card {
+            padding: 16px 14px;
+            border-radius: 16px;
+          }
+          .detail-header-flex {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .detail-title {
+            font-size: 18px;
+          }
+          .detail-prize-box {
+            text-align: left;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
           }
           .detail-specs-grid {
             grid-template-columns: 1fr;
+            gap: 8px;
+          }
+          .rules-check-list {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+          .early-access-box {
+            padding: 16px 14px;
+            border-radius: 16px;
+          }
+          .access-info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+          .access-icon-bubble {
+            width: 30px;
+            height: 30px;
+          }
+          .access-title {
+            font-size: 14px;
+            line-height: 1.35;
+          }
+          .access-sub {
+            font-size: 11.5px;
+            line-height: 1.45;
           }
           .access-form {
             flex-direction: column;
+            width: 100%;
+            gap: 8px;
+          }
+          .access-input {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 13px;
+            padding: 10px 14px;
           }
           .access-submit-btn {
             width: 100%;
             justify-content: center;
+            font-size: 13px;
+            padding: 10px 16px;
+          }
+          .teaser-features-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+          }
+          .teaser-feature-pill {
+            width: 100%;
+            justify-content: center;
+            font-size: 11.5px;
+            padding: 8px 12px;
+            text-align: center;
+            box-sizing: border-box;
           }
         }
       `}</style>
