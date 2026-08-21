@@ -707,15 +707,102 @@ export default function ProfilePage() {
           color: rgba(156, 163, 175, 0.85);
           margin-top: 1px;
         }
-        .chevron-icon {
-          color: rgba(156, 163, 175, 0.6);
-        }
-
         .text-blue { color: #60A5FA; }
         .text-emerald { color: #34D399; }
         .text-amber { color: #FBBF24; }
         .text-rose { color: #FB7185; }
         .text-muted { color: rgba(156, 163, 175, 0.7); }
+
+        /* Responsive Mobile Breakpoint */
+        @media (max-width: 768px) {
+          .profile-page-root {
+            padding-top: 76px;
+            padding-bottom: 60px;
+          }
+          .profile-header-card {
+            padding: 18px 16px;
+            border-radius: 16px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+          }
+          .profile-avatar {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+          }
+          .profile-display-name {
+            font-size: 18px;
+          }
+          .profile-logout-btn {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .buyer-onboarding-banner,
+          .seller-status-banner,
+          .admin-status-banner {
+            padding: 16px;
+            border-radius: 16px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+          .banner-content {
+            gap: 10px;
+          }
+          .banner-icon-bubble {
+            width: 36px;
+            height: 36px;
+          }
+          .banner-title {
+            font-size: 15px;
+          }
+          .banner-desc {
+            font-size: 12px;
+          }
+          .banner-cta-btn {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .profile-section-card {
+            padding: 18px 14px;
+            border-radius: 16px;
+          }
+          .section-title {
+            font-size: 16px;
+          }
+          .section-subtitle {
+            font-size: 12px;
+          }
+
+          .listing-status-card {
+            padding: 12px 14px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .listing-info {
+            width: 100%;
+            min-width: 0;
+          }
+          .listing-title-row {
+            justify-content: space-between;
+          }
+          .listing-badge-col {
+            width: 100%;
+          }
+          .status-pill {
+            display: inline-flex;
+            width: 100%;
+            justify-content: center;
+          }
+
+          .quick-actions-grid {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
     </div>
   );

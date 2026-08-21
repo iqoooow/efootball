@@ -852,7 +852,9 @@ export function HeroFeaturedGlassCard({ listings = [] }: HeroFeaturedProps) {
 
   // Active item from real Supabase listings
   const currentListing = items[currentIndex] || items[0];
-  const priceUzs = Math.round(currentListing.price * UZS_EXCHANGE_RATE).toLocaleString("uz-UZ");
+  const priceUzs = Math.round(currentListing.price * UZS_EXCHANGE_RATE)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   const platformLabel =
     currentListing.platform === "mobile"
       ? "📱 Mobile (iOS / Android)"

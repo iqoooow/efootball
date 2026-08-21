@@ -60,10 +60,13 @@ export function Footer() {
                 RASMIY & XAVFSIZ ESCROW MARKETPLACE
               </div>
 
-              {/* Verified Reviews Badge Button */}
-              <div className="footer-verified-badge">
-                <Star size={14} fill="#FBBF24" color="#FBBF24" />
-                <span>5.0 ⭐ Ishonchli Kiberfutbol Markazi</span>
+              <p className="footer-brand-tagline">
+                O&apos;zbekistondagi eng yirik va xavfsiz eFootball akkountlar savdosi hamda kiberfutbol ekotizimi.
+              </p>
+
+              <div className="footer-security-pill">
+                <Shield size={13} color="#34D399" />
+                <span>100% Kafolatlangan Escrow Himoyasi</span>
               </div>
             </div>
 
@@ -96,7 +99,6 @@ export function Footer() {
                 {[
                   { href: "/seller/apply", label: "Partnerlik Arizasi" },
                   { href: "/seller/dashboard", label: "Sotuvchi Paneli" },
-                  { href: "/admin", label: "Admin Dashboard" },
                   { href: "/terms", label: "Foydalanish Shartlari" },
                   { href: "/privacy", label: "Maxfiylik Siyosati" },
                 ].map((link) => (
@@ -292,17 +294,25 @@ export function Footer() {
           letter-spacing: 0.06em;
           text-transform: uppercase;
         }
-        .footer-verified-badge {
+        .footer-brand-tagline {
+          font-size: 13px;
+          color: rgba(156, 163, 175, 0.85);
+          line-height: 1.5;
+          margin: 0;
+          max-width: 320px;
+        }
+        .footer-security-pill {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 14px;
-          border-radius: 10px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          font-size: 12px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          font-size: 11.5px;
           font-weight: 600;
-          color: #FFF;
+          color: #34D399;
+          width: fit-content;
         }
 
         .footer-nav-col {

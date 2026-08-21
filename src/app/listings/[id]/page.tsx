@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { fetchListingById } from "@/lib/dataService";
 import { getPlatformLabel, formatDate } from "@/lib/utils";
+import { ListingGallery } from "@/components/listings/ListingGallery";
 import type { Metadata } from "next";
 
 interface Props {
@@ -48,20 +49,6 @@ export default async function ListingDetailPage({ params }: Props) {
   const UZS_EXCHANGE_RATE = 13000;
   const priceUzs = Math.round(listing.price * UZS_EXCHANGE_RATE).toLocaleString("uz-UZ");
 
-  const platformIcons: Record<string, any> = {
-    ps: Gamepad2,
-    xbox: Gamepad2,
-    pc: Monitor,
-    mobile: Smartphone,
-  };
-  const PlatformIcon = platformIcons[listing.platform] || Gamepad2;
-
-  const hasImage =
-    listing.images &&
-    listing.images.length > 0 &&
-    typeof listing.images[0] === "string" &&
-    listing.images[0].trim() !== "";
-
   return (
     <div className="listing-detail-root">
       <div className="container detail-container">
@@ -85,46 +72,13 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="detail-main-grid">
           {/* Left Column: Image Gallery, Specs, Details */}
           <div className="detail-content-left">
-            {/* Hero Image Showcase */}
-            <div className="detail-hero-image-box">
-              {hasImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={listing.images![0]}
-                  alt={listing.title}
-                  className="detail-main-img"
-                />
-              ) : (
-                <div className="detail-fallback-banner">
-                  <div className="fallback-bg-art" />
-                  <div className="fallback-meta">
-                    <span className="fallback-pill">
-                      <PlatformIcon size={14} /> {getPlatformLabel(listing.platform)}
-                    </span>
-                    <span className="fallback-ovr-text">
-                      {listing.team_rating ? `${listing.team_rating} OVR Rating` : "eFootball Hisob"}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Floating Badges */}
-              <div className="hero-top-badges">
-                <span className="badge-platform-tag">
-                  <PlatformIcon size={13} /> {getPlatformLabel(listing.platform)}
-                </span>
-                {listing.team_rating && (
-                  <span className="badge-ovr-tag">
-                    🔥 {listing.team_rating} OVR
-                  </span>
-                )}
-              </div>
-
-              <div className="hero-bottom-guarantee">
-                <ShieldCheck size={14} className="text-emerald" />
-                <span>100% Escrow Himoyalangan</span>
-              </div>
-            </div>
+            {/* Interactive Image Gallery (1-6 images with thumbnails) */}
+            <ListingGallery
+              images={listing.images}
+              title={listing.title}
+              platform={listing.platform}
+              teamRating={listing.team_rating}
+            />
 
             {/* Title & Key Specs Header */}
             <div className="detail-title-card">

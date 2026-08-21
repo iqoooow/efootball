@@ -390,27 +390,30 @@ export function Navbar() {
         {/* User Card if logged in */}
         {(user || isSuperAdmin) && (
           <div className="drawer-user-card">
-            <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-            <div className="drawer-user-info">
-              <span className="drawer-user-name">{displayName}</span>
-              <span className="drawer-user-email">{user?.email || "admin@efzone.uz"}</span>
-              <div className="header-badge-row" style={{ marginTop: "4px" }}>
-                {isSuperAdmin ? (
-                  <span className="role-tag tag-admin">
-                    <ShieldAlert size={10} /> Admin
-                  </span>
-                ) : isSeller ? (
-                  <span className="role-tag tag-seller">
-                    <BadgeCheck size={10} /> Sotuvchi
-                  </span>
-                ) : (
-                  <span className="role-tag tag-buyer">
-                    <User size={10} /> Xaridor
-                  </span>
-                )}
+            <div className="drawer-user-left">
+              <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
+                {displayName.charAt(0).toUpperCase()}
               </div>
+              <div className="drawer-user-info">
+                <span className="drawer-user-name">{displayName}</span>
+                <span className="drawer-user-email">{user?.email || "admin@efzone.uz"}</span>
+              </div>
+            </div>
+
+            <div className="drawer-user-right">
+              {isSuperAdmin ? (
+                <span className="role-tag tag-admin">
+                  <ShieldAlert size={10} /> Admin
+                </span>
+              ) : isSeller ? (
+                <span className="role-tag tag-seller">
+                  <BadgeCheck size={10} /> Sotuvchi
+                </span>
+              ) : (
+                <span className="role-tag tag-buyer">
+                  <User size={10} /> Xaridor
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -987,20 +990,29 @@ export function Navbar() {
         }
 
         .drawer-user-card {
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.02);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 14px 18px;
+          background: transparent;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
           display: flex;
           align-items: center;
-          gap: 12px;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .drawer-user-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+          flex: 1;
         }
         .drawer-user-info {
           display: flex;
           flex-direction: column;
+          min-width: 0;
           overflow: hidden;
         }
         .drawer-user-name {
-          font-size: 14px;
+          font-size: 13.5px;
           font-weight: 700;
           color: #FFF;
           white-space: nowrap;
@@ -1008,11 +1020,14 @@ export function Navbar() {
           text-overflow: ellipsis;
         }
         .drawer-user-email {
-          font-size: 11.5px;
-          color: #9CA3AF;
+          font-size: 11px;
+          color: rgba(156, 163, 175, 0.8);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        .drawer-user-right {
+          flex-shrink: 0;
         }
 
         .drawer-body {

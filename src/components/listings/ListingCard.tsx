@@ -92,6 +92,12 @@ export function ListingCard({ listing }: ListingCardProps) {
                 🔥 {listing.team_rating} OVR
               </span>
             )}
+
+            {listing.images && listing.images.length > 1 && (
+              <span className="card-photo-count-pill">
+                📷 {listing.images.length}
+              </span>
+            )}
           </div>
         </div>
 
@@ -267,6 +273,21 @@ export function ListingCard({ listing }: ListingCardProps) {
           padding: 3px 8px;
           border-radius: 6px;
           box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .card-photo-count-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 3px 7px;
+          border-radius: 6px;
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          font-size: 10px;
+          font-weight: 700;
+          color: #FFF;
+          margin-left: auto;
         }
 
         .card-body-content {
