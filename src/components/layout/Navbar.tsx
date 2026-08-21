@@ -346,114 +346,183 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Mobile Menu Toggle Button */}
+            {/* Mobile Menu Toggle Button (Visible only on mobile/tablet) */}
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="mobile-menu-toggle visible-mobile"
+              onClick={() => setMobileMenuOpen(true)}
+              className="mobile-hamburger-btn"
               aria-label="Menyuni ochish"
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              <Menu size={22} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="mobile-drawer animate-slide-down">
-          <div className="mobile-links-list">
-            <Link
-              href="/listings"
-              onClick={() => setMobileMenuOpen(false)}
-              className="mobile-nav-item"
-            >
-              <Gamepad2 size={18} className="text-blue" />
-              <span>Akkauntlar</span>
-            </Link>
+      {/* Mobile Drawer Backdrop & Sidebar (Opens from Left, 80% width) */}
+      <div
+        className={`mobile-backdrop ${mobileMenuOpen ? "active" : ""}`}
+        onClick={() => setMobileMenuOpen(false)}
+        aria-hidden={!mobileMenuOpen}
+      />
 
-            <div className="mobile-nav-item disabled">
-              <Trophy size={18} className="text-muted" />
-              <span>Turnirlar</span>
-              <span className="badge-coming-soon">Tez kunda</span>
+      <aside
+        className={`mobile-sidebar-drawer ${mobileMenuOpen ? "open" : ""}`}
+        aria-label="Mobil navigatsiya"
+      >
+        {/* Drawer Header */}
+        <div className="drawer-header">
+          <div onClick={() => setMobileMenuOpen(false)} style={{ cursor: "pointer" }}>
+            <Logo size="sm" />
+          </div>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="drawer-close-btn"
+            aria-label="Menyuni yopish"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* User Card if logged in */}
+        {(user || isSuperAdmin) && (
+          <div className="drawer-user-card">
+            <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
+              {displayName.charAt(0).toUpperCase()}
             </div>
-
-            {user || isSuperAdmin ? (
-              <>
-                <div className="mobile-divider" />
-                {isSuperAdmin && (
-                  <Link
-                    href="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mobile-nav-item text-rose"
-                  >
-                    <ShieldAlert size={18} />
-                    <span>Admin Panel</span>
-                  </Link>
+            <div className="drawer-user-info">
+              <span className="drawer-user-name">{displayName}</span>
+              <span className="drawer-user-email">{user?.email || "admin@efzone.uz"}</span>
+              <div className="header-badge-row" style={{ marginTop: "4px" }}>
+                {isSuperAdmin ? (
+                  <span className="role-tag tag-admin">
+                    <ShieldAlert size={10} /> Admin
+                  </span>
+                ) : isSeller ? (
+                  <span className="role-tag tag-seller">
+                    <BadgeCheck size={10} /> Sotuvchi
+                  </span>
+                ) : (
+                  <span className="role-tag tag-buyer">
+                    <User size={10} /> Xaridor
+                  </span>
                 )}
-
-                {isSeller && (
-                  <Link
-                    href="/seller/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mobile-nav-item text-amber"
-                  >
-                    <LayoutDashboard size={18} />
-                    <span>Sotuvchi Kabineti</span>
-                  </Link>
-                )}
-
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mobile-nav-item"
-                >
-                  <User size={18} />
-                  <span>Mening Profilim</span>
-                </Link>
-
-                {isBuyer && (
-                  <Link
-                    href="/seller/apply"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mobile-nav-item text-emerald"
-                  >
-                    <PlusCircle size={18} />
-                    <span>Akkaunt Sotish (Ariza)</span>
-                  </Link>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="mobile-logout-btn"
-                >
-                  <LogOut size={16} /> Chiqish
-                </button>
-              </>
-            ) : (
-              <div className="mobile-auth-actions">
-                <Link
-                  href="/auth/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mobile-login-btn"
-                >
-                  Kirish
-                </Link>
-                <Link
-                  href="/auth/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mobile-register-btn"
-                >
-                  Ro&apos;yxatdan O&apos;tish
-                </Link>
               </div>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* Drawer Links */}
+        <div className="drawer-body">
+          <div className="drawer-section-title">Bo&apos;limlar</div>
+          <Link
+            href="/listings"
+            onClick={() => setMobileMenuOpen(false)}
+            className="drawer-nav-link"
+          >
+            <Gamepad2 size={18} className="text-blue" />
+            <span>Akkauntlar bozoriga o&apos;tish</span>
+          </Link>
+
+          <div className="drawer-nav-link disabled">
+            <Trophy size={18} className="text-muted" />
+            <span>Turnirlar</span>
+            <span className="badge-coming-soon">Tez kunda</span>
+          </div>
+
+          <div className="drawer-divider" />
+
+          {/* User authenticated actions */}
+          {user || isSuperAdmin ? (
+            <>
+              <div className="drawer-section-title">Boshqaruv</div>
+              {isSuperAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="drawer-nav-link highlight-admin-link"
+                >
+                  <ShieldAlert size={18} />
+                  <span>Admin Boshqaruv Paneli</span>
+                </Link>
+              )}
+
+              {isSeller && (
+                <Link
+                  href="/seller/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="drawer-nav-link highlight-seller-link"
+                >
+                  <LayoutDashboard size={18} />
+                  <span>Sotuvchi Kabineti</span>
+                </Link>
+              )}
+
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="drawer-nav-link"
+              >
+                <User size={18} />
+                <span>Mening Profilim</span>
+              </Link>
+
+              {isBuyer && (
+                <Link
+                  href="/seller/apply"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="drawer-nav-link highlight-apply-link"
+                >
+                  <PlusCircle size={18} />
+                  <span>Akkaunt Sotish (Ariza)</span>
+                </Link>
+              )}
+
+              <div className="drawer-divider" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="drawer-logout-btn"
+              >
+                <LogOut size={16} /> Chiqish
+              </button>
+            </>
+          ) : (
+            <div className="drawer-guest-actions">
+              <Link
+                href="/auth/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="drawer-login-btn"
+              >
+                Kirish
+              </Link>
+              <Link
+                href="/auth/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="drawer-register-btn"
+              >
+                <span>Ro&apos;yxatdan O&apos;tish</span>
+                <ArrowRight size={15} />
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Drawer Footer info */}
+        <div className="drawer-footer">
+          <div className="drawer-trust-info">
+            <ShieldCheck size={14} className="text-emerald" />
+            <span>100% Escrow Kafolati</span>
           </div>
         </div>
-      )}
+      </aside>
 
-      {/* Embedded High-End Styles (Clean, Glassmorphic, Zero Border-Mania) */}
+      {/* Embedded High-End Styles */}
       <style>{`
         .navbar-root {
           position: fixed;
@@ -461,7 +530,7 @@ export function Navbar() {
           left: 0;
           right: 0;
           z-index: 100;
-          background: rgba(3, 7, 18, 0.82);
+          background: rgba(3, 7, 18, 0.85);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -826,80 +895,256 @@ export function Navbar() {
           background: rgba(244, 63, 94, 0.1);
         }
 
-        /* Mobile */
+        /* Mobile Hamburger Trigger - strictly hidden on desktop */
         .mobile-hamburger-btn {
-          background: transparent;
-          border: none;
+          display: none;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 10px;
           color: #FFF;
           cursor: pointer;
-          padding: 6px;
+          padding: 8px;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
         }
-        .mobile-drawer {
-          background: rgba(5, 10, 24, 0.98);
-          backdrop-filter: blur(30px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 20px 24px;
+        .mobile-hamburger-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
         }
-        .mobile-links-list {
+
+        /* Mobile Backdrop Overlay */
+        .mobile-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 998;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mobile-backdrop.active {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        /* Mobile Sidebar Drawer (Opens from Left, 80% width) */
+        .mobile-sidebar-drawer {
+          position: fixed;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: 80vw;
+          max-width: 320px;
+          background: rgba(6, 11, 25, 0.98);
+          backdrop-filter: blur(32px);
+          -webkit-backdrop-filter: blur(32px);
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          z-index: 999;
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
+          transform: translateX(-100%);
+          transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow-y: auto;
         }
-        .mobile-nav-item {
+        .mobile-sidebar-drawer.open {
+          transform: translateX(0);
+        }
+
+        .drawer-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .drawer-close-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #9CA3AF;
+          border-radius: 8px;
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .drawer-close-btn:hover {
+          color: #FFF;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .drawer-user-card {
+          padding: 16px 20px;
+          background: rgba(255, 255, 255, 0.02);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .drawer-user-info {
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .drawer-user-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #FFF;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .drawer-user-email {
+          font-size: 11.5px;
+          color: #9CA3AF;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .drawer-body {
+          flex: 1;
+          padding: 18px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .drawer-section-title {
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: rgba(156, 163, 175, 0.6);
+          padding: 6px 10px 2px 10px;
+        }
+        .drawer-nav-link {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 11px 14px;
+          border-radius: 12px;
+          color: rgba(229, 231, 235, 0.9);
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+        .drawer-nav-link:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #FFF;
+        }
+        .drawer-nav-link.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .drawer-nav-link.highlight-admin-link {
+          color: #FB7185;
+        }
+        .drawer-nav-link.highlight-admin-link:hover {
+          background: rgba(244, 63, 94, 0.1);
+        }
+        .drawer-nav-link.highlight-seller-link {
+          color: #FBBF24;
+        }
+        .drawer-nav-link.highlight-seller-link:hover {
+          background: rgba(245, 158, 11, 0.1);
+        }
+        .drawer-nav-link.highlight-apply-link {
+          color: #34D399;
+        }
+        .drawer-nav-link.highlight-apply-link:hover {
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        .drawer-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.06);
+          margin: 10px 6px;
+        }
+
+        .drawer-logout-btn {
+          width: 100%;
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: 15px;
-          font-weight: 600;
-          color: #FFF;
-          text-decoration: none;
-          padding: 8px 0;
-        }
-        .mobile-nav-item.disabled {
-          opacity: 0.6;
-        }
-        .mobile-divider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.06);
-          margin: 4px 0;
-        }
-        .mobile-logout-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: none;
-          border: none;
+          padding: 11px 14px;
+          border-radius: 12px;
           color: #FB7185;
           font-size: 14px;
           font-weight: 600;
+          background: transparent;
+          border: none;
           cursor: pointer;
-          padding: 8px 0;
+          transition: background 0.15s ease;
+          text-align: left;
         }
-        .mobile-auth-actions {
+        .drawer-logout-btn:hover {
+          background: rgba(244, 63, 94, 0.1);
+        }
+
+        .drawer-guest-actions {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          margin-top: 10px;
+          margin-top: 14px;
+          padding: 0 4px;
         }
-        .mobile-login-btn {
-          text-align: center;
-          padding: 11px;
-          border-radius: 10px;
+        .drawer-login-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 12px;
+          border-radius: 12px;
           background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           color: #FFF;
           font-weight: 600;
           font-size: 14px;
           text-decoration: none;
+          transition: background 0.2s;
         }
-        .mobile-register-btn {
-          text-align: center;
-          padding: 11px;
-          border-radius: 10px;
-          background: #2563EB;
+        .drawer-login-btn:hover {
+          background: rgba(255, 255, 255, 0.09);
+        }
+        .drawer-register-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
           color: #FFF;
           font-weight: 600;
           font-size: 14px;
           text-decoration: none;
+          box-shadow: 0 4px 18px rgba(37, 99, 235, 0.35);
+          transition: transform 0.2s;
+        }
+        .drawer-register-btn:hover {
+          transform: translateY(-1px);
+        }
+
+        .drawer-footer {
+          padding: 16px 20px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          background: rgba(0, 0, 0, 0.2);
+        }
+        .drawer-trust-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #34D399;
         }
 
         /* Utilities */
@@ -908,13 +1153,17 @@ export function Navbar() {
         .text-blue { color: #60A5FA; }
         .text-rose { color: #FB7185; }
 
+        /* Responsive Breakpoints */
         @media (max-width: 860px) {
           .hidden-mobile { display: none !important; }
-          .show-mobile-flex { display: flex !important; }
           .navbar-top-bar { display: none; }
+          .mobile-hamburger-btn { display: flex !important; }
+          .guest-cta-group .login-link { display: none; }
         }
         @media (min-width: 861px) {
-          .show-mobile-flex { display: none !important; }
+          .mobile-hamburger-btn { display: none !important; }
+          .mobile-backdrop { display: none !important; }
+          .mobile-sidebar-drawer { display: none !important; }
         }
 
         @keyframes scaleUp {
@@ -928,3 +1177,4 @@ export function Navbar() {
     </header>
   );
 }
+
