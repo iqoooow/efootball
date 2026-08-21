@@ -11,6 +11,12 @@ import {
   Smartphone,
   Monitor,
   Sparkles,
+  Zap,
+  Gift,
+  Search,
+  CheckCircle,
+  Flame,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { fetchListings } from "@/lib/dataService";
@@ -19,8 +25,8 @@ import { FilterSidebar } from "@/components/listings/FilterSidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Barcha E'lonlar Katalogi | EFZone Marketplace",
-  description: "eFootball 2026 eng sara hisoblarini qidiring, saralang va xarid qiling.",
+  title: "eFootball Akkauntlar Bozori | G2G eFootball Zone",
+  description: "eFootball 2026 eng kuchli akkauntlari, coinlar va kiberfutbol hisoblari rasmiy kafolat bilan.",
 };
 
 interface SearchParams {
@@ -48,109 +54,180 @@ export default async function ListingsPage({
     sort: params.sort,
     search: params.search,
     page,
-    perPage: 12,
+    perPage: 16,
   });
 
   const totalPages = Math.ceil(total / perPage);
-  const currentPlatform = params.platform || "all";
 
-  const platforms = [
-    { key: "all", label: "Barchasi" },
-    { key: "mobile", label: "📱 Mobile" },
-    { key: "ps", label: "🎮 PlayStation" },
-    { key: "pc", label: "💻 PC" },
-    { key: "xbox", label: "🎮 Xbox" },
+  // Popular Game Brands Ribbon Data (like G2G.com)
+  const popularBrands = [
+    { name: "eFootball", watermark: "EFB", count: `${total > 0 ? total : 3700}+ e'lon`, active: true, link: "/listings" },
+    { name: "EA FC Mobile", watermark: "FUT", count: "8.1k e'lon", active: false, link: "/listings?search=EA" },
+    { name: "PlayStation Network", watermark: "PSN", count: "1.2k e'lon", active: false, link: "/listings?platform=ps" },
+    { name: "Clash of Clans", watermark: "COC", count: "20.6k e'lon", active: false, link: "#" },
+    { name: "Counter-Strike 2", watermark: "CS2", count: "6.3k e'lon", active: false, link: "#" },
+    { name: "Clash Royale", watermark: "CR", count: "7.2k e'lon", active: false, link: "#" },
+    { name: "Mobile Legends", watermark: "ML", count: "5.3k e'lon", active: false, link: "#" },
   ];
 
   return (
-    <div className="listings-page-root">
-      <div className="container listings-container">
-        {/* Marketplace Header */}
-        <div className="marketplace-header-row">
-          <div>
-            <div className="header-badge-row">
-              <span className="live-market-badge">
-                <Sparkles size={12} /> eFootball 2026 Katalog
-              </span>
+    <div className="g2g-marketplace-root">
+      <div className="container">
+        {/* Breadcrumb Navigation */}
+        <div className="g2g-breadcrumbs">
+          <Link href="/">Bosh sahifa</Link>
+          <span className="crumb-sep">›</span>
+          <Link href="/listings">O&apos;yin akkauntlari</Link>
+          <span className="crumb-sep">›</span>
+          <span className="crumb-active">eFootball</span>
+        </div>
+
+        {/* 1. G2G 3D Purple Hero Category Banner */}
+        <div className="g2g-hero-banner">
+          <div className="hero-banner-content">
+            <div className="hero-category-badge">
+              <div className="hero-cat-icon">
+                <Gamepad2 size={24} color="#FFF" />
+              </div>
+              <div>
+                <h1 className="hero-cat-title">eFootball Akkauntlari</h1>
+                <p className="hero-cat-desc">Rasmiy Escrow kafolatlangan savdo markazi</p>
+              </div>
             </div>
-            <h1 className="marketplace-main-title">
-              Barcha Marketplace E&apos;lonlari
-            </h1>
-            <p className="marketplace-sub-count">
-              Jami <strong>{total}</strong> ta tasdiqlangan e&apos;lon mavjud
-            </p>
+
+            <div className="hero-metrics-row">
+              <div className="metric-badge-box">
+                <span className="metric-lbl">Jami takliflar</span>
+                <span className="metric-val">{total > 0 ? `${total} ta` : "3.7k"}</span>
+              </div>
+              <div className="metric-badge-box">
+                <span className="metric-lbl">Faol sotuvchilar</span>
+                <span className="metric-val">218+ Pro</span>
+              </div>
+              <div className="metric-badge-box">
+                <span className="metric-lbl">Xavfsizlik</span>
+                <span className="metric-val text-emerald">100% Escrow</span>
+              </div>
+            </div>
           </div>
 
-          <Link href="/seller/apply" className="btn-add-listing-cta">
-            <PlusCircle size={17} />
-            <span>Akkaunt Sotish</span>
-          </Link>
+          <div className="hero-cta-box">
+            <Link href="/seller/apply" className="btn-hero-sell">
+              <PlusCircle size={17} />
+              <span>Akkaunt Sotish</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Mobile Quick Platform Filter Pills Bar */}
-        <div className="mobile-platform-pills-bar">
-          {platforms.map((p) => {
-            const isSelected =
-              (p.key === "all" && !params.platform) || params.platform === p.key;
-            return (
+        {/* 2. Service Tabs Pill-Bar */}
+        <div className="g2g-service-tabs-row">
+          <div className="service-tabs-wrap">
+            <Link href="/listings" className="service-tab-btn active">
+              <Gamepad2 size={15} />
+              <span>O&apos;yin akkauntlari</span>
+            </Link>
+            <Link href="/listings?type=coin" className="service-tab-btn">
+              <Zap size={15} />
+              <span>Coin & GP To&apos;ldirish</span>
+            </Link>
+            <Link href="/seller/apply" className="service-tab-btn">
+              <Gift size={15} />
+              <span>Sotuvchi bo&apos;lish</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* 3. Popular Brands Horizontal Ribbon */}
+        <div className="g2g-brands-section">
+          <div className="brands-title-row">
+            <Flame size={16} className="text-amber" />
+            <span className="brands-title">Ommabop kategoriyalar</span>
+          </div>
+
+          <div className="brands-scroll-track">
+            {popularBrands.map((b, idx) => (
               <Link
-                key={p.key}
-                href={
-                  p.key === "all"
-                    ? `/listings${params.sort ? `?sort=${params.sort}` : ""}`
-                    : `/listings?platform=${p.key}${params.sort ? `&sort=${params.sort}` : ""}`
-                }
-                className={`platform-pill-btn ${isSelected ? "active" : ""}`}
+                key={idx}
+                href={b.link}
+                className={`brand-ribbon-card ${b.active ? "active" : ""}`}
               >
-                {p.label}
+                <div className="brand-watermark">{b.watermark}</div>
+                <div className="brand-name">{b.name}</div>
+                <div className="brand-count">{b.count}</div>
               </Link>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
-        {/* Responsive Catalog Layout */}
-        <div className="listings-catalog-grid">
-          {/* Desktop Left Filter Sidebar */}
-          <aside className="desktop-filter-sidebar">
+        {/* 4. Filter & Search Controls Bar */}
+        <div className="g2g-filter-controls-bar">
+          <div className="filter-search-wrap">
+            <form action="/listings" method="GET" className="search-form-flex">
+              <Search size={16} className="search-icon" />
+              <input
+                type="text"
+                name="search"
+                defaultValue={params.search || ""}
+                placeholder="E'lonlar va o'yinchilar bo'yicha qidirish (masalan: Messi, 3200 OVR)..."
+                className="g2g-search-input"
+              />
+              {params.platform && <input type="hidden" name="platform" value={params.platform} />}
+              {params.sort && <input type="hidden" name="sort" value={params.sort} />}
+            </form>
+          </div>
+
+          <div className="filter-summary-row">
+            <div className="active-tag-chip">
+              <span>Brend: <strong>eFootball</strong></span>
+              <Link href="/listings" className="tag-clear-btn">×</Link>
+            </div>
+            <span className="results-counter">
+              Jami <strong>{total}</strong> ta e&apos;lon topildi
+            </span>
+          </div>
+        </div>
+
+        {/* 5. Main Catalog Grid (Left Sidebar + Right 4-Column Cards) */}
+        <div className="g2g-catalog-main-layout">
+          {/* Left: Filter Sidebar */}
+          <aside className="g2g-sidebar-pane">
             <Suspense
               fallback={
-                <div className="filter-loading-placeholder">
-                  Filterlar yuklanmoqda...
-                </div>
+                <div className="sidebar-loading">Filterlar yuklanmoqda...</div>
               }
             >
               <FilterSidebar />
             </Suspense>
           </aside>
 
-          {/* Main Listings Stream */}
-          <main className="listings-main-stream">
+          {/* Right: Listings Stream (4-Column Grid like G2G) */}
+          <main className="g2g-cards-pane">
             {listings.length === 0 ? (
-              <div className="empty-listings-card">
-                <div className="empty-icon-wrap">
-                  <PackageOpen size={32} className="text-muted" />
+              <div className="g2g-empty-state">
+                <div className="empty-circle-icon">
+                  <PackageOpen size={36} />
                 </div>
-                <h3 className="empty-heading">
-                  Ushbu mezonlar bo&apos;yicha e&apos;lon topilmadi
+                <h3 className="empty-title">
+                  Ushbu filterlar bo&apos;yicha e&apos;lon topilmadi
                 </h3>
-                <p className="empty-desc">
-                  Filter parametrlarini o&apos;zgartirib ko&apos;ring yoki boshqa platformani tanlang.
+                <p className="empty-text">
+                  Qidiruv so&apos;zini yoki filter parametrlarini o&apos;zgartirib ko&apos;ring.
                 </p>
-                <Link href="/listings" className="empty-reset-btn">
-                  Filterlarni Tozalash
+                <Link href="/listings" className="empty-clear-action">
+                  Barcha E&apos;lonlarni Ko&apos;rish
                 </Link>
               </div>
             ) : (
               <>
-                <div className="listings-cards-responsive-grid">
+                <div className="g2g-cards-4col-grid">
                   {listings.map((listing) => (
                     <ListingCard key={listing.id} listing={listing as any} />
                   ))}
                 </div>
 
-                {/* Enhanced Pagination */}
+                {/* Numbered Pagination */}
                 {totalPages > 1 && (
-                  <div className="pagination-wrapper">
+                  <div className="g2g-pagination">
                     {page > 1 && (
                       <Link
                         href={`/listings?${new URLSearchParams({
@@ -158,32 +235,35 @@ export default async function ListingsPage({
                           ...(params.minPrice && { minPrice: params.minPrice }),
                           ...(params.maxPrice && { maxPrice: params.maxPrice }),
                           ...(params.sort && { sort: params.sort }),
+                          ...(params.search && { search: params.search }),
                           page: String(page - 1),
                         }).toString()}`}
-                        className="pagination-nav-btn"
+                        className="page-nav-btn"
                       >
                         <ChevronLeft size={16} /> Oldingi
                       </Link>
                     )}
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-                      const newParams = new URLSearchParams();
-                      if (params.platform) newParams.set("platform", params.platform);
-                      if (params.minPrice) newParams.set("minPrice", params.minPrice);
-                      if (params.maxPrice) newParams.set("maxPrice", params.maxPrice);
-                      if (params.sort) newParams.set("sort", params.sort);
-                      newParams.set("page", String(p));
-
-                      return (
-                        <Link
-                          key={p}
-                          href={`/listings?${newParams.toString()}`}
-                          className={`pagination-num-btn ${p === page ? "active" : ""}`}
-                        >
-                          {p}
-                        </Link>
-                      );
-                    })}
+                    <div className="page-nums-list">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .slice(Math.max(0, page - 3), Math.min(totalPages, page + 2))
+                        .map((pNum) => (
+                          <Link
+                            key={pNum}
+                            href={`/listings?${new URLSearchParams({
+                              ...(params.platform && { platform: params.platform }),
+                              ...(params.minPrice && { minPrice: params.minPrice }),
+                              ...(params.maxPrice && { maxPrice: params.maxPrice }),
+                              ...(params.sort && { sort: params.sort }),
+                              ...(params.search && { search: params.search }),
+                              page: String(pNum),
+                            }).toString()}`}
+                            className={`page-num-item ${pNum === page ? "active" : ""}`}
+                          >
+                            {pNum}
+                          </Link>
+                        ))}
+                    </div>
 
                     {page < totalPages && (
                       <Link
@@ -192,9 +272,10 @@ export default async function ListingsPage({
                           ...(params.minPrice && { minPrice: params.minPrice }),
                           ...(params.maxPrice && { maxPrice: params.maxPrice }),
                           ...(params.sort && { sort: params.sort }),
+                          ...(params.search && { search: params.search }),
                           page: String(page + 1),
                         }).toString()}`}
-                        className="pagination-nav-btn"
+                        className="page-nav-btn"
                       >
                         Keyingi <ChevronRight size={16} />
                       </Link>
@@ -208,100 +289,159 @@ export default async function ListingsPage({
       </div>
 
       <style>{`
-        .listings-page-root {
-          padding-top: 88px;
+        .g2g-marketplace-root {
+          padding: 24px 0 80px 0;
           min-height: 100vh;
-          background: #030712;
         }
 
-        .listings-container {
-          padding-top: 28px;
-          padding-bottom: 80px;
+        /* Breadcrumbs */
+        .g2g-breadcrumbs {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12.5px;
+          color: rgba(156, 163, 175, 0.75);
+          margin-bottom: 20px;
+        }
+        .g2g-breadcrumbs a {
+          color: rgba(156, 163, 175, 0.75);
+          text-decoration: none;
+          transition: color 0.15s ease;
+        }
+        .g2g-breadcrumbs a:hover {
+          color: #FFF;
+        }
+        .crumb-sep {
+          color: rgba(255, 255, 255, 0.2);
+        }
+        .crumb-active {
+          color: #60A5FA;
+          font-weight: 600;
         }
 
-        .marketplace-header-row {
+        /* 1. Purple 3D Hero Banner */
+        .g2g-hero-banner {
+          background: linear-gradient(135deg, #4C1D95 0%, #311068 50%, #1E084A 100%);
+          border: 1px solid rgba(167, 139, 250, 0.25);
+          border-radius: 20px;
+          padding: 28px 36px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 16px;
           margin-bottom: 24px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+          box-shadow: 0 16px 40px rgba(49, 16, 104, 0.4);
+          position: relative;
+          overflow: hidden;
         }
 
-        .header-badge-row {
-          margin-bottom: 6px;
+        .hero-banner-content {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          z-index: 2;
         }
 
-        .live-market-badge {
-          display: inline-flex;
+        .hero-category-badge {
+          display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 3px 10px;
-          border-radius: 999px;
-          background: rgba(37, 99, 235, 0.15);
-          border: 1px solid rgba(37, 99, 235, 0.3);
-          color: #60A5FA;
-          font-size: 11.5px;
-          font-weight: 700;
+          gap: 16px;
         }
 
-        .marketplace-main-title {
+        .hero-cat-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-cat-title {
           font-family: 'Outfit', sans-serif;
-          font-size: clamp(22px, 3.2vw, 32px);
+          font-size: 26px;
           font-weight: 800;
           color: #FFF;
           margin: 0;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.01em;
         }
 
-        .marketplace-sub-count {
+        .hero-cat-desc {
           font-size: 13.5px;
-          color: rgba(156, 163, 175, 0.85);
+          color: rgba(233, 213, 255, 0.85);
           margin: 4px 0 0 0;
         }
 
-        .marketplace-sub-count strong {
+        .hero-metrics-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .metric-badge-box {
+          background: rgba(0, 0, 0, 0.25);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 6px 14px;
+          border-radius: 10px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .metric-lbl {
+          font-size: 10px;
+          text-transform: uppercase;
+          color: rgba(216, 180, 254, 0.8);
+          font-weight: 600;
+        }
+
+        .metric-val {
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 800;
           color: #FFF;
         }
 
-        .btn-add-listing-cta {
+        .btn-hero-sell {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 11px 22px;
+          padding: 12px 24px;
           border-radius: 12px;
-          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+          background: #E11D48;
           color: #FFF;
-          font-size: 14px;
           font-weight: 700;
+          font-size: 14px;
           text-decoration: none;
-          box-shadow: 0 4px 18px rgba(37, 99, 235, 0.35);
-          transition: transform 0.2s;
+          box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+          transition: all 0.2s ease;
+          z-index: 2;
+        }
+        .btn-hero-sell:hover {
+          background: #F43F5E;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(225, 29, 72, 0.6);
         }
 
-        .btn-add-listing-cta:hover {
-          transform: translateY(-1.5px);
+        /* 2. Service Tabs Pill-Bar */
+        .g2g-service-tabs-row {
+          margin-bottom: 24px;
         }
-
-        /* Mobile Platform Quick Filter Bar */
-        .mobile-platform-pills-bar {
+        .service-tabs-wrap {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           overflow-x: auto;
-          padding-bottom: 16px;
-          margin-bottom: 20px;
-          -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
         }
-        .mobile-platform-pills-bar::-webkit-scrollbar {
-          display: none;
-        }
-
-        .platform-pill-btn {
-          padding: 8px 16px;
+        .service-tab-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 18px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.08);
@@ -312,144 +452,308 @@ export default async function ListingsPage({
           white-space: nowrap;
           transition: all 0.15s ease;
         }
-
-        .platform-pill-btn:hover {
+        .service-tab-btn:hover {
           background: rgba(255, 255, 255, 0.08);
           color: #FFF;
         }
-
-        .platform-pill-btn.active {
-          background: #2563EB;
-          border-color: #2563EB;
+        .service-tab-btn.active {
+          background: #4F46E5;
+          border-color: #4F46E5;
           color: #FFF;
-          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
         }
 
-        /* Catalog Grid Layout */
-        .listings-catalog-grid {
+        /* 3. Popular Brands Ribbon */
+        .g2g-brands-section {
+          margin-bottom: 28px;
+        }
+        .brands-title-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #FFF;
+          margin-bottom: 12px;
+        }
+        .brands-scroll-track {
           display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 32px;
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+          gap: 12px;
+        }
+        .brand-ribbon-card {
+          position: relative;
+          background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+          border-radius: 12px;
+          padding: 14px 12px;
+          text-decoration: none;
+          color: #FFF;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          min-height: 80px;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+        .brand-ribbon-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 22px rgba(220, 38, 38, 0.4);
+        }
+        .brand-ribbon-card.active {
+          border: 2px solid #FFF;
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        .brand-watermark {
+          position: absolute;
+          top: 4px;
+          right: 6px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 28px;
+          font-weight: 900;
+          color: rgba(0, 0, 0, 0.2);
+          pointer-events: none;
+        }
+        .brand-name {
+          font-family: 'Outfit', sans-serif;
+          font-size: 13px;
+          font-weight: 800;
+          line-height: 1.2;
+        }
+        .brand-count {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.75);
+          margin-top: 3px;
+        }
+
+        /* 4. Filter & Search Controls Bar */
+        .g2g-filter-controls-bar {
+          background: rgba(14, 22, 42, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          padding: 14px 20px;
+          margin-bottom: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .search-form-flex {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: rgba(6, 11, 24, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 10px;
+          padding: 8px 14px;
+        }
+        .search-icon {
+          color: rgba(156, 163, 175, 0.7);
+        }
+        .g2g-search-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          color: #FFF;
+          font-size: 13.5px;
+          outline: none;
+        }
+        .g2g-search-input::placeholder {
+          color: rgba(156, 163, 175, 0.5);
+        }
+
+        .filter-summary-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 12.5px;
+          color: rgba(156, 163, 175, 0.85);
+        }
+
+        .active-tag-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          padding: 3px 10px;
+          border-radius: 6px;
+          color: #FFF;
+          font-size: 11.5px;
+        }
+        .tag-clear-btn {
+          color: rgba(255, 255, 255, 0.6);
+          text-decoration: none;
+          font-size: 14px;
+          margin-left: 2px;
+        }
+
+        /* 5. Main Catalog Layout */
+        .g2g-catalog-main-layout {
+          display: grid;
+          grid-template-columns: 260px 1fr;
+          gap: 24px;
           align-items: start;
         }
 
-        .desktop-filter-sidebar {
+        .g2g-sidebar-pane {
           position: sticky;
-          top: 96px;
+          top: 90px;
           align-self: start;
         }
 
-        .listings-main-stream {
+        .g2g-cards-pane {
           min-width: 0;
         }
 
-        .listings-cards-responsive-grid {
+        /* 4-Column Card Grid */
+        .g2g-cards-4col-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 20px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
         }
 
-        .empty-listings-card {
+        /* Empty State */
+        .g2g-empty-state {
           text-align: center;
           padding: 64px 20px;
-          background: rgba(10, 16, 32, 0.75);
-          border: 1px solid rgba(255, 255, 255, 0.07);
-          border-radius: 24px;
+          background: rgba(14, 22, 42, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 18px;
         }
-
-        .empty-icon-wrap {
-          width: 64px;
-          height: 64px;
+        .empty-circle-icon {
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.04);
+          color: rgba(156, 163, 175, 0.6);
           display: flex;
           align-items: center;
           justify-content: center;
           margin: 0 auto 16px;
         }
-
-        .empty-heading {
+        .empty-title {
           font-family: 'Outfit', sans-serif;
           font-size: 18px;
           font-weight: 700;
           color: #FFF;
           margin: 0 0 8px 0;
         }
-
-        .empty-desc {
+        .empty-text {
           font-size: 13.5px;
-          color: rgba(156, 163, 175, 0.85);
+          color: rgba(156, 163, 175, 0.8);
           margin: 0 auto 20px auto;
-          max-width: 380px;
+          max-width: 400px;
         }
-
-        .empty-reset-btn {
+        .empty-clear-action {
           display: inline-flex;
-          padding: 10px 20px;
+          padding: 9px 20px;
           background: #2563EB;
           color: #FFF;
+          font-size: 13px;
           font-weight: 700;
-          font-size: 13.5px;
-          border-radius: 10px;
+          border-radius: 8px;
           text-decoration: none;
         }
 
-        .pagination-wrapper {
+        /* Numbered Pagination */
+        .g2g-pagination {
           display: flex;
-          justify-content: center;
           align-items: center;
-          gap: 8px;
-          margin-top: 40px;
-          flex-wrap: wrap;
+          justify-content: center;
+          gap: 12px;
+          margin-top: 36px;
         }
-
-        .pagination-nav-btn {
-          height: 40px;
-          padding: 0 14px;
-          border-radius: 10px;
+        .page-nav-btn {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          font-size: 13px;
+          padding: 8px 16px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(209, 213, 219, 0.9);
+          font-size: 12.5px;
           font-weight: 600;
           text-decoration: none;
-          background: rgba(255, 255, 255, 0.04);
-          color: #FFF;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.15s ease;
         }
-
-        .pagination-num-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          display: inline-flex;
+        .page-nav-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #FFF;
+        }
+        .page-nums-list {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .page-num-item {
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(209, 213, 219, 0.9);
+          display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 13.5px;
+          font-size: 12.5px;
           font-weight: 700;
           text-decoration: none;
-          background: rgba(255, 255, 255, 0.04);
-          color: #FFF;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.15s ease;
         }
-
-        .pagination-num-btn.active {
+        .page-num-item:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #FFF;
+        }
+        .page-num-item.active {
           background: #2563EB;
           border-color: #2563EB;
           color: #FFF;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
         }
 
+        .text-amber { color: #FBBF24; }
+        .text-emerald { color: #34D399; }
+
         /* Responsive Breakpoints */
-        @media (max-width: 900px) {
-          .listings-catalog-grid {
+        @media (max-width: 1280px) {
+          .g2g-cards-4col-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 1024px) {
+          .g2g-catalog-main-layout {
             grid-template-columns: 1fr;
           }
-          .desktop-filter-sidebar {
-            display: none;
+          .g2g-sidebar-pane {
+            position: static;
           }
-          .listings-cards-responsive-grid {
+          .g2g-cards-4col-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .g2g-hero-banner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+          }
+          .hero-cat-title {
+            font-size: 20px;
+          }
+          .btn-hero-sell {
+            width: 100%;
+            justify-content: center;
+          }
+          .brands-scroll-track {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+          }
+          .g2g-cards-4col-grid {
             grid-template-columns: 1fr;
-            gap: 16px;
           }
         }
       `}</style>
