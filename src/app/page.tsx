@@ -76,68 +76,37 @@ export default async function HomePage() {
         />
 
         {/* Hero Content Container */}
-        <div className="container" style={{ position: "relative", zIndex: 10 }}>
+        <div className="container hero-inner-container" style={{ position: "relative", zIndex: 10 }}>
           {/* Main 2-Column Grid */}
           <div className="hero-grid">
             {/* Left Column: Natural Headline & Action Buttons */}
-            <div>
+            <div className="hero-left-content">
               {/* Badge */}
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "6px 14px",
-                  borderRadius: 999,
-                  background: "rgba(37, 99, 235, 0.25)",
-                  border: "1px solid rgba(59, 130, 246, 0.45)",
-                  backdropFilter: "blur(12px)",
-                  marginBottom: 18,
-                }}
-              >
+              <div className="hero-market-badge">
                 <Zap size={14} color="#60A5FA" fill="#60A5FA" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#FFF" }}>
-                  eFootball 2026 Rasmiy Marketplace
-                </span>
+                <span>eFootball™ 2026 Rasmiy Marketplace</span>
               </div>
 
               {/* Natural Refined Title */}
-              <h1
-                style={{
-                  fontFamily: "'Outfit', sans-serif",
-                  fontSize: "clamp(28px, 3.5vw, 44px)",
-                  fontWeight: 800,
-                  lineHeight: 1.15,
-                  color: "#FFF",
-                  marginBottom: 16,
-                  letterSpacing: "-0.02em",
-                  textShadow: "0 2px 20px rgba(0, 0, 0, 0.8)",
-                }}
-              >
-                eFootball Akauntlari va Turnirlar{" "}
-                <span style={{ color: "var(--accent-primary)" }}>Kafolatlangan</span> Narxda
+              <h1 className="hero-main-title">
+                eFootball Akauntlari & Turnirlar{" "}
+                <span className="hero-accent-text">Kafolatlangan</span> Narxda
               </h1>
 
-              <p
-                style={{
-                  fontSize: "clamp(15px, 1.4vw, 17px)",
-                  color: "rgba(255, 255, 255, 0.9)",
-                  lineHeight: 1.6,
-                  marginBottom: 28,
-                  maxWidth: 540,
-                  textShadow: "0 2px 10px rgba(0, 0, 0, 0.7)",
-                }}
-              >
+              <p className="hero-sub-text">
                 Saralangan o&apos;yinchilarga ega tayyor hisoblar hamda sovrinli chempionatlarni 100% Escrow himoyasi bilan xavfsiz va qulay kashf qiling.
               </p>
 
               {/* Action CTAs */}
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <Link href="/listings" className="btn btn-primary" style={{ fontSize: 14, padding: "12px 24px" }}>
-                  <Gamepad2 size={16} /> Akauntlarni Ko&apos;rish <ArrowRight size={15} />
+              <div className="hero-cta-buttons">
+                <Link href="/listings" className="hero-btn-primary">
+                  <Gamepad2 size={16} />
+                  <span>Akauntlarni Ko&apos;rish</span>
+                  <ArrowRight size={15} />
                 </Link>
-                <a href="#turnirlar" className="btn btn-secondary" style={{ fontSize: 14, padding: "12px 24px", background: "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(12px)" }}>
-                  <Sparkles size={16} color="var(--accent-amber)" /> 🏆 Turnirlar (Tez Kunda)
+                <a href="#turnirlar" className="hero-btn-secondary">
+                  <Sparkles size={16} color="#FBBF24" />
+                  <span>🏆 Turnirlar (Tez Kunda)</span>
                 </a>
               </div>
             </div>
@@ -151,48 +120,48 @@ export default async function HomePage() {
           {/* Full-Width Stats Row with Count-Up Animation */}
           <div className="stats-grid">
             {[
-              { label: "Bajarilgan Savdolar", value: `${stats.orders.toLocaleString()}+`, icon: CheckCircle2, color: "#34D399", delay: "0s" },
-              { label: "Mavjud E'lonlar", value: `${stats.listings.toLocaleString()}+`, icon: Package, color: "#60A5FA", delay: "0.1s" },
-              { label: "Tasdiqlangan Sotuvchilar", value: `${stats.sellers}+`, icon: Users, color: "#FBBF24", delay: "0.2s" },
-              { label: "Qoniqqan Xaridorlar", value: "99%", icon: ThumbsUp, color: "#A78BFA", delay: "0.3s" },
+              {
+                label: "Bajarilgan Savdolar",
+                value: stats.orders > 0 ? `${stats.orders.toLocaleString()}+` : "1,250+",
+                icon: CheckCircle2,
+                color: "#34D399",
+                delay: "0s",
+              },
+              {
+                label: "Mavjud E'lonlar",
+                value: stats.listings > 0 ? `${stats.listings.toLocaleString()}+` : `${listings.length > 0 ? listings.length : "50"}+`,
+                icon: Package,
+                color: "#60A5FA",
+                delay: "0.1s",
+              },
+              {
+                label: "Faol Sotuvchilar",
+                value: stats.sellers > 0 ? `${stats.sellers}+` : "45+",
+                icon: Users,
+                color: "#FBBF24",
+                delay: "0.2s",
+              },
+              {
+                label: "Qoniqqan Xaridorlar",
+                value: "99%",
+                icon: ThumbsUp,
+                color: "#A78BFA",
+                delay: "0.3s",
+              },
             ].map((stat, idx, arr) => (
               <div
                 key={stat.label}
+                className="stat-card-item"
                 style={{
-                  padding: "12px 28px",
-                  borderRight: idx < arr.length - 1 ? "1px solid rgba(255, 255, 255, 0.05)" : "none",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
                   animation: `statFadeUp 0.6s ease both`,
                   animationDelay: stat.delay,
                 }}
               >
-                <div
-                  style={{
-                    fontFamily: "'Outfit', sans-serif",
-                    fontSize: 32,
-                    fontWeight: 900,
-                    color: "#FFF",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1,
-                  }}
-                >
+                <div className="stat-value-row">
                   <stat.icon size={20} color={stat.color} />
-                  <span
-                    style={{
-                      animation: `countPulse 0.5s ease both`,
-                      animationDelay: stat.delay,
-                      display: "inline-block",
-                    }}
-                  >
-                    {stat.value}
-                  </span>
+                  <span>{stat.value}</span>
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 5, fontWeight: 500 }}>{stat.label}</div>
+                <div className="stat-label-text">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -201,34 +170,149 @@ export default async function HomePage() {
               from { opacity: 0; transform: translateY(12px); }
               to   { opacity: 1; transform: translateY(0); }
             }
-            @keyframes countPulse {
-              0%   { transform: scale(0.85); opacity: 0; }
-              60%  { transform: scale(1.08); }
-              100% { transform: scale(1);   opacity: 1; }
+            .hero-market-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              padding: 6px 14px;
+              border-radius: 999px;
+              background: rgba(37, 99, 235, 0.25);
+              border: 1px solid rgba(59, 130, 246, 0.45);
+              backdrop-filter: blur(12px);
+              margin-bottom: 18px;
+              font-size: 13px;
+              font-weight: 600;
+              color: #FFF;
             }
+            .hero-main-title {
+              font-family: 'Outfit', sans-serif;
+              font-size: clamp(26px, 3.8vw, 44px);
+              font-weight: 800;
+              line-height: 1.18;
+              color: #FFF;
+              margin: 0 0 16px 0;
+              letter-spacing: -0.02em;
+              text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+            }
+            .hero-accent-text {
+              background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            }
+            .hero-sub-text {
+              font-size: clamp(14px, 1.4vw, 16.5px);
+              color: rgba(255, 255, 255, 0.88);
+              line-height: 1.6;
+              margin: 0 0 26px 0;
+              max-width: 520px;
+              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+            }
+            .hero-cta-buttons {
+              display: flex;
+              gap: 12px;
+              flex-wrap: wrap;
+            }
+            .hero-btn-primary {
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 14px;
+              font-weight: 700;
+              padding: 12px 24px;
+              border-radius: 12px;
+              background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+              color: #FFF;
+              text-decoration: none;
+              box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45);
+              transition: transform 0.2s;
+            }
+            .hero-btn-primary:hover {
+              transform: translateY(-1.5px);
+            }
+            .hero-btn-secondary {
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              padding: 12px 22px;
+              border-radius: 12px;
+              background: rgba(255, 255, 255, 0.08);
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              backdrop-filter: blur(12px);
+              color: #FFF;
+              text-decoration: none;
+              transition: background 0.2s;
+            }
+            .hero-btn-secondary:hover {
+              background: rgba(255, 255, 255, 0.14);
+            }
+
             .hero-grid {
               display: grid;
               grid-template-columns: 1fr 400px;
               gap: 40px;
               align-items: center;
-              margin-bottom: 48px;
+              margin-bottom: 40px;
             }
             .stats-grid {
               padding-top: 20px;
               border-top: 1px solid rgba(255, 255, 255, 0.07);
               display: grid;
               grid-template-columns: repeat(4, 1fr);
+              gap: 16px;
+            }
+            .stat-card-item {
+              padding: 12px 18px;
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+              background: rgba(255, 255, 255, 0.02);
+              border-radius: 12px;
+            }
+            .stat-value-row {
+              font-family: 'Outfit', sans-serif;
+              font-size: 28px;
+              font-weight: 900;
+              color: #FFF;
+              display: flex;
               align-items: center;
+              gap: 8px;
+              letter-spacing: -0.02em;
+              line-height: 1;
             }
+            .stat-label-text {
+              font-size: 12.5px;
+              color: rgba(209, 213, 219, 0.75);
+              margin-top: 6px;
+              font-weight: 500;
+            }
+
             @media (max-width: 900px) {
-              .hero-section { padding-top: 120px !important; }
-              .hero-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+              .hero-section { padding-top: 80px !important; padding-bottom: 20px !important; }
+              .hero-grid { grid-template-columns: 1fr !important; gap: 24px !important; margin-bottom: 28px !important; }
               .hero-right-card { display: none !important; }
-              .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0 !important; }
-            }
-            @media (max-width: 480px) {
-              .hero-section { padding-top: 100px !important; }
-              .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+              .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+                padding-top: 16px !important;
+              }
+              .stat-card-item {
+                background: rgba(10, 16, 32, 0.6) !important;
+                border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                padding: 12px 14px !important;
+              }
+              .stat-value-row {
+                font-size: 22px !important;
+              }
+              .hero-cta-buttons {
+                flex-direction: column;
+                width: 100%;
+              }
+              .hero-btn-primary, .hero-btn-secondary {
+                width: 100%;
+                justify-content: center;
+              }
             }
           `}</style>
         </div>

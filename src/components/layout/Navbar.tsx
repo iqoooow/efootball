@@ -1156,9 +1156,19 @@ export function Navbar() {
         /* Responsive Breakpoints */
         @media (max-width: 860px) {
           .hidden-mobile { display: none !important; }
-          .navbar-top-bar { display: none; }
-          .mobile-hamburger-btn { display: flex !important; }
-          .guest-cta-group .login-link { display: none; }
+          .navbar-top-bar { display: none !important; }
+          .navbar-main { height: 58px !important; }
+          .navbar-container { padding: 0 14px !important; }
+          .user-profile-menu { display: none !important; }
+          .guest-cta-group { display: none !important; }
+          .mobile-hamburger-btn {
+            display: flex !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          }
         }
         @media (min-width: 861px) {
           .mobile-hamburger-btn { display: none !important; }
