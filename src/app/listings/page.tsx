@@ -59,50 +59,49 @@ export default async function ListingsPage({
 
   const totalPages = Math.ceil(total / perPage);
 
-  // eFootball Platform & Price Category Ribbon Data (like G2G.com)
-  const currentPlatform = params.platform || "";
+  // eFootball Mobile Platform & Category Ribbon Data
   const popularBrands = [
     {
-      name: "Barchasi",
+      name: "Barcha Akkauntlar",
       watermark: "ALL",
       count: `${total} ta e'lon`,
-      active: !params.platform && !params.minPrice && !params.maxPrice,
+      active: !params.platform && !params.minPrice && !params.maxPrice && !params.search,
       link: "/listings",
     },
     {
-      name: "Android / iOS",
-      watermark: "MOB",
-      count: "Mobile versiya",
-      active: params.platform === "mobile",
-      link: "/listings?platform=mobile",
+      name: "Android (Play Market)",
+      watermark: "AND",
+      count: "Google Play",
+      active: params.platform === "android" || params.platform === "mobile",
+      link: "/listings?platform=android",
     },
     {
-      name: "Konsol (PS/Xbox)",
-      watermark: "PS5",
-      count: "PlayStation & Xbox",
-      active: params.platform === "ps" || params.platform === "xbox",
-      link: "/listings?platform=ps",
+      name: "iOS (iPhone/iPad)",
+      watermark: "IOS",
+      count: "Apple App Store",
+      active: params.platform === "ios",
+      link: "/listings?platform=ios",
     },
     {
-      name: "Kompyuter (Steam)",
-      watermark: "PC",
-      count: "PC Steam",
-      active: params.platform === "pc",
-      link: "/listings?platform=pc",
+      name: "Konami ID Bog'langan",
+      watermark: "KON",
+      count: "To'liq xavfsiz",
+      active: params.search === "Konami",
+      link: "/listings?search=Konami",
+    },
+    {
+      name: "3200+ Top OVR",
+      watermark: "OVR",
+      count: "Kuchli tarkib",
+      active: params.search === "3200",
+      link: "/listings?search=3200",
     },
     {
       name: "VIP Akkauntlar",
       watermark: "VIP",
-      count: "$50+ & Top OVR",
+      count: "$50+ & Top reyting",
       active: params.minPrice === "50",
       link: "/listings?minPrice=50&sort=rating",
-    },
-    {
-      name: "Tezkor Yetkazish",
-      watermark: "FAST",
-      count: "10-15 daqiqa",
-      active: params.sort === "newest" && !params.platform,
-      link: "/listings?sort=newest",
     },
     {
       name: "Arzon Takliflar",

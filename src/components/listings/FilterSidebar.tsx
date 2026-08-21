@@ -2,11 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback } from "react";
-import { SlidersHorizontal, ChevronDown, Check, Gamepad2 } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 
 interface FilterState {
   type: string;
-  platform: string;
   minPrice: string;
   maxPrice: string;
   minRating: string;
@@ -19,15 +18,11 @@ export function FilterSidebar() {
 
   const [filters, setFilters] = useState<FilterState>({
     type: searchParams.get("type") || "",
-    platform: searchParams.get("platform") || "",
     minPrice: searchParams.get("minPrice") || "",
     maxPrice: searchParams.get("maxPrice") || "",
     minRating: searchParams.get("minRating") || "",
     sort: searchParams.get("sort") || "newest",
   });
-
-  const [brandsOpen, setBrandsOpen] = useState(true);
-  const [platformOpen, setPlatformOpen] = useState(true);
 
   const applyFilters = useCallback(
     (newFilters: FilterState) => {
@@ -47,25 +42,16 @@ export function FilterSidebar() {
   };
 
   const clearAll = () => {
-    const cleared = { type: "", platform: "", minPrice: "", maxPrice: "", minRating: "", sort: "newest" };
+    const cleared = { type: "", minPrice: "", maxPrice: "", minRating: "", sort: "newest" };
     setFilters(cleared);
     router.push("/listings");
   };
 
   const hasActiveFilters =
     filters.type !== "" ||
-    filters.platform !== "" ||
     filters.minPrice !== "" ||
     filters.maxPrice !== "" ||
     filters.minRating !== "";
-
-  const platformOptions = [
-    { key: "", label: "Barcha platformalar" },
-    { key: "mobile", label: "Android / iOS" },
-    { key: "ps", label: "PlayStation (PS4/PS5)" },
-    { key: "pc", label: "PC / Steam" },
-    { key: "xbox", label: "Xbox Series / One" },
-  ];
 
   return (
     <div className="g2g-sidebar-root">
@@ -82,63 +68,7 @@ export function FilterSidebar() {
         )}
       </div>
 
-      {/* 1. Accordion: Brendlar */}
-      <div className="filter-group-block">
-        <button
-          type="button"
-          onClick={() => setBrandsOpen(!brandsOpen)}
-          className="accordion-header-btn"
-        >
-          <span className="group-heading">Brendlar (1)</span>
-          <ChevronDown size={14} className={`chevron ${brandsOpen ? "open" : ""}`} />
-        </button>
-
-        {brandsOpen && (
-          <div className="accordion-body">
-            <label className="checkbox-row active-brand-row">
-              <input type="checkbox" checked readOnly className="g2g-checkbox" />
-              <span className="checkbox-custom checked">
-                <Check size={11} color="#FFF" />
-              </span>
-              <span className="checkbox-label">eFootball 2026</span>
-            </label>
-          </div>
-        )}
-      </div>
-
-      {/* 2. Accordion: Platform */}
-      <div className="filter-group-block">
-        <button
-          type="button"
-          onClick={() => setPlatformOpen(!platformOpen)}
-          className="accordion-header-btn"
-        >
-          <span className="group-heading">Platforma</span>
-          <ChevronDown size={14} className={`chevron ${platformOpen ? "open" : ""}`} />
-        </button>
-
-        {platformOpen && (
-          <div className="accordion-body">
-            {platformOptions.map((opt) => {
-              const isChecked = filters.platform === opt.key;
-              return (
-                <label
-                  key={opt.key}
-                  onClick={() => update("platform", isChecked && opt.key !== "" ? "" : opt.key)}
-                  className="checkbox-row"
-                >
-                  <span className={`checkbox-custom ${isChecked ? "checked" : ""}`}>
-                    {isChecked && <Check size={11} color="#FFF" />}
-                  </span>
-                  <span className="checkbox-label">{opt.label}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* 3. Saralash Tartibi (Sort) */}
+      {/* 1. Saralash Tartibi (Sort) */}
       <div className="filter-group-block">
         <span className="group-heading static-label">Saralash tartibi</span>
         <select
@@ -153,7 +83,7 @@ export function FilterSidebar() {
         </select>
       </div>
 
-      {/* 4. Kategoriya */}
+      {/* 2. Kategoriya */}
       <div className="filter-group-block">
         <span className="group-heading static-label">Kategoriya</span>
         <div className="chips-flex-wrap">
@@ -174,7 +104,7 @@ export function FilterSidebar() {
         </div>
       </div>
 
-      {/* 5. Narx oralig'i ($) */}
+      {/* 3. Narx oralig'i ($) */}
       <div className="filter-group-block">
         <span className="group-heading static-label">Narx oralig&apos;i ($)</span>
         <div className="price-inputs-row">
@@ -198,7 +128,7 @@ export function FilterSidebar() {
         </div>
       </div>
 
-      {/* 6. Sotuvchi minimal reytingi */}
+      {/* 4. Sotuvchi minimal reytingi */}
       <div className="filter-group-block last">
         <span className="group-heading static-label">Sotuvchi reytingi</span>
         <div className="chips-flex-wrap">
@@ -229,6 +159,8 @@ export function FilterSidebar() {
           display: flex;
           flex-direction: column;
           gap: 18px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .sidebar-top-header {
@@ -272,19 +204,6 @@ export function FilterSidebar() {
           padding-bottom: 0;
         }
 
-        .accordion-header-btn {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: none;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          color: inherit;
-          width: 100%;
-          text-align: left;
-        }
-
         .group-heading {
           font-size: 12.5px;
           font-weight: 700;
@@ -292,59 +211,6 @@ export function FilterSidebar() {
         }
         .group-heading.static-label {
           margin-bottom: 2px;
-        }
-
-        .chevron {
-          color: rgba(156, 163, 175, 0.6);
-          transition: transform 0.2s ease;
-        }
-        .chevron.open {
-          transform: rotate(180deg);
-        }
-
-        .accordion-body {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          padding-top: 4px;
-        }
-
-        .checkbox-row {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          cursor: pointer;
-          user-select: none;
-          font-size: 12.5px;
-          color: rgba(209, 213, 219, 0.85);
-          transition: color 0.15s ease;
-        }
-        .checkbox-row:hover {
-          color: #FFF;
-        }
-        .g2g-checkbox {
-          display: none;
-        }
-
-        .checkbox-custom {
-          width: 16px;
-          height: 16px;
-          border-radius: 4px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          background: rgba(255, 255, 255, 0.04);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          transition: all 0.15s ease;
-        }
-        .checkbox-custom.checked {
-          background: #2563EB;
-          border-color: #2563EB;
-        }
-
-        .checkbox-label {
-          font-weight: 500;
         }
 
         /* Select Dropdown */
@@ -396,16 +262,21 @@ export function FilterSidebar() {
         .price-inputs-row {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
+          width: 100%;
+          box-sizing: border-box;
         }
         .price-num-input {
-          flex: 1;
-          height: 36px;
+          flex: 1 1 0%;
+          min-width: 0;
+          width: 100%;
+          box-sizing: border-box;
+          height: 38px;
           background: rgba(6, 11, 24, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 8px;
           padding: 0 10px;
-          font-size: 12.5px;
+          font-size: 13px;
           color: #FFF;
           outline: none;
         }
@@ -414,7 +285,8 @@ export function FilterSidebar() {
         }
         .price-dash {
           color: rgba(156, 163, 175, 0.5);
-          font-size: 12px;
+          font-size: 13px;
+          flex-shrink: 0;
         }
       `}</style>
     </div>

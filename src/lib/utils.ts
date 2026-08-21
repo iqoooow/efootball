@@ -22,12 +22,13 @@ export function formatDate(date: string) {
 
 export function getPlatformLabel(platform: string) {
   const labels: Record<string, string> = {
-    ps: 'PlayStation',
-    xbox: 'Xbox',
-    pc: 'PC',
-    mobile: 'Mobil',
+    android: 'Android',
+    ios: 'iOS',
+    mobile: 'Android / iOS',
+    konami: 'Konami ID',
+    all: 'Android & iOS',
   }
-  return labels[platform] || platform
+  return labels[platform] || 'Android / iOS'
 }
 
 export function getOrderStatusLabel(status: string) {

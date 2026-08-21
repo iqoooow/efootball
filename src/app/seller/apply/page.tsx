@@ -21,10 +21,10 @@ import {
 } from "lucide-react";
 
 const PLATFORMS = [
-  { value: "mobile", label: "eFootball Mobile" },
-  { value: "ps", label: "PlayStation (PS4/PS5)" },
-  { value: "pc", label: "PC (Steam)" },
-  { value: "xbox", label: "Xbox" },
+  { value: "android", label: "🤖 Android (Google Play)" },
+  { value: "ios", label: "🍏 iOS (Apple App Store)" },
+  { value: "mobile", label: "📱 Android / iOS (Universal)" },
+  { value: "konami", label: "🔑 Konami ID Bog'langan" },
 ];
 
 export default function SellerApplyPage() {
