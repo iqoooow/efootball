@@ -1239,20 +1239,34 @@ export default function AdminPage() {
                     placeholder="Ism, email yoki Telegram bo'yicha qidiruv..."
                     className="toolbar-search-input"
                   />
+                  {userSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setUserSearch("")}
+                      className="search-clear-btn"
+                      aria-label="Tozalash"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
 
-                <div className="filter-select-box">
-                  <Filter size={14} className="filter-icon" />
-                  <select
-                    value={userRoleFilter}
-                    onChange={(e) => setUserRoleFilter(e.target.value)}
-                    className="toolbar-select"
-                  >
-                    <option value="all">Barcha rollar ({users.length})</option>
-                    <option value="buyer">Faqat Xaridorlar</option>
-                    <option value="seller">Faqat Sotuvchilar</option>
-                    <option value="admin">Faqat Adminlar</option>
-                  </select>
+                <div className="filter-pills-bar">
+                  {[
+                    { key: "all", label: `Barchasi (${users.length})` },
+                    { key: "buyer", label: `Xaridorlar (${users.filter((u) => u.role === "buyer" || !u.role).length})` },
+                    { key: "seller", label: `Sotuvchilar (${users.filter((u) => u.role === "seller").length})` },
+                    { key: "admin", label: `Adminlar (${users.filter((u) => u.role === "admin").length})` },
+                  ].map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      onClick={() => setUserRoleFilter(filter.key)}
+                      className={`filter-pill-btn ${userRoleFilter === filter.key ? "active" : ""}`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1462,21 +1476,35 @@ export default function AdminPage() {
                     placeholder="Sarlavha yoki platforma bo'yicha..."
                     className="toolbar-search-input"
                   />
+                  {listingSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setListingSearch("")}
+                      className="search-clear-btn"
+                      aria-label="Tozalash"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
 
-                <div className="filter-select-box">
-                  <Filter size={14} className="filter-icon" />
-                  <select
-                    value={listingStatusFilter}
-                    onChange={(e) => setListingStatusFilter(e.target.value)}
-                    className="toolbar-select"
-                  >
-                    <option value="all">Barcha holatlar ({listings.length})</option>
-                    <option value="active">Faol (Sotuvda)</option>
-                    <option value="pending_review">Moderatsiyada</option>
-                    <option value="sold">Sotilgan</option>
-                    <option value="rejected">Rad etilgan</option>
-                  </select>
+                <div className="filter-pills-bar">
+                  {[
+                    { key: "all", label: `Barchasi (${listings.length})` },
+                    { key: "active", label: `Faol (${listings.filter((l) => l.status === "active").length})` },
+                    { key: "pending_review", label: `Moderatsiya (${pendingModerationCount})` },
+                    { key: "sold", label: `Sotilgan (${listings.filter((l) => l.status === "sold").length})` },
+                    { key: "rejected", label: `Rad etilgan (${listings.filter((l) => l.status === "rejected").length})` },
+                  ].map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      onClick={() => setListingStatusFilter(filter.key)}
+                      className={`filter-pill-btn ${listingStatusFilter === filter.key ? "active" : ""}`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -2633,34 +2661,73 @@ export default function AdminPage() {
           left: 14px;
           color: rgba(156, 163, 175, 0.6);
         }
+        .search-clear-btn {
+          position: absolute;
+          right: 12px;
+          background: none;
+          border: none;
+          color: rgba(156, 163, 175, 0.7);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 4px;
+          border-radius: 50%;
+        }
+        .search-clear-btn:hover {
+          color: #FFF;
+          background: rgba(255, 255, 255, 0.1);
+        }
         .toolbar-search-input {
           width: 100%;
           background: rgba(10, 17, 36, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 12px;
-          padding: 10px 14px 10px 38px;
+          padding: 10px 36px 10px 38px;
           font-size: 13px;
           color: #FFF;
           outline: none;
+          transition: all 0.2s ease;
         }
-        .filter-select-box {
-          position: relative;
+        .toolbar-search-input:focus {
+          border-color: rgba(37, 99, 235, 0.5);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .filter-pills-bar {
           display: flex;
           align-items: center;
+          gap: 8px;
+          overflow-x: auto;
+          scrollbar-width: none;
+          max-width: 100%;
+          padding: 2px 0;
         }
-        .filter-icon {
-          position: absolute;
-          left: 12px;
-          color: rgba(156, 163, 175, 0.6);
+        .filter-pills-bar::-webkit-scrollbar {
+          display: none;
         }
-        .toolbar-select {
-          background: rgba(10, 17, 36, 0.85);
+        .filter-pill-btn {
+          padding: 7px 14px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 600;
+          background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          padding: 10px 14px 10px 34px;
-          font-size: 13px;
+          color: rgba(209, 213, 219, 0.85);
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+        }
+        .filter-pill-btn:hover {
           color: #FFF;
-          outline: none;
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.15);
+        }
+        .filter-pill-btn.active {
+          background: #2563EB;
+          border-color: #2563EB;
+          color: #FFF;
+          box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
         }
 
         .admin-table-container {
