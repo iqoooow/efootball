@@ -59,47 +59,47 @@ export default async function ListingsPage({
 
   const totalPages = Math.ceil(total / perPage);
 
-  // eFootball Mobile Platform & Category Ribbon Data
+  // eFootball Mobile Account Categories Ribbon Data
   const popularBrands = [
     {
       name: "Barcha Akkauntlar",
       watermark: "ALL",
       count: `${total} ta e'lon`,
-      active: !params.platform && !params.minPrice && !params.maxPrice && !params.search,
+      active: !params.type && !params.minPrice && !params.maxPrice && !params.search && (!params.sort || params.sort === "newest"),
       link: "/listings",
-    },
-    {
-      name: "Android (Play Market)",
-      watermark: "AND",
-      count: "Google Play",
-      active: params.platform === "android" || params.platform === "mobile",
-      link: "/listings?platform=android",
-    },
-    {
-      name: "iOS (iPhone/iPad)",
-      watermark: "IOS",
-      count: "Apple App Store",
-      active: params.platform === "ios",
-      link: "/listings?platform=ios",
-    },
-    {
-      name: "Konami ID Bog'langan",
-      watermark: "KON",
-      count: "To'liq xavfsiz",
-      active: params.search === "Konami",
-      link: "/listings?search=Konami",
     },
     {
       name: "3200+ Top OVR",
       watermark: "OVR",
-      count: "Kuchli tarkib",
+      count: "Kuchli tarkiblar",
       active: params.search === "3200",
       link: "/listings?search=3200",
     },
     {
+      name: "Epic & BigTime",
+      watermark: "EPIC",
+      count: "Afsonaviy kartalar",
+      active: params.search === "Epic",
+      link: "/listings?search=Epic",
+    },
+    {
+      name: "Coin & GP Zaxirali",
+      watermark: "COIN",
+      count: "Balansli hisoblar",
+      active: params.type === "coins",
+      link: "/listings?type=coins",
+    },
+    {
+      name: "1-Divizion Pro",
+      watermark: "DIV1",
+      count: "Yuqori reyting",
+      active: params.sort === "rating",
+      link: "/listings?sort=rating",
+    },
+    {
       name: "VIP Akkauntlar",
       watermark: "VIP",
-      count: "$50+ & Top reyting",
+      count: "$50+ donat tarkib",
       active: params.minPrice === "50",
       link: "/listings?minPrice=50&sort=rating",
     },
