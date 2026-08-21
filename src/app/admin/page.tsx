@@ -1254,9 +1254,9 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Users Table */}
+              {/* Users Table (Desktop) & Cards (Mobile) */}
               <div className="admin-table-container">
-                <div className="table-responsive">
+                <div className="table-responsive desktop-table-view">
                   <table className="admin-custom-table">
                     <thead>
                       <tr>
@@ -1365,6 +1365,74 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile User Cards List */}
+                <div className="mobile-cards-feed">
+                  {filteredUsers.length === 0 ? (
+                    <div className="table-empty-td">Foydalanuvchilar topilmadi</div>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <div key={u.id} className="mobile-admin-data-card">
+                        <div className="card-top-row">
+                          <div className="user-avatar-meta">
+                            <div className={`user-table-av av-${u.role || "buyer"}`}>
+                              {(u.full_name || u.email || "U").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="card-item-title">{u.full_name || "Ismsiz"}</div>
+                              <div className="card-item-subtitle">{u.email || `ID: ${u.id.slice(0, 8)}...`}</div>
+                            </div>
+                          </div>
+
+                          <span className={`role-pill role-${u.role || "buyer"}`}>
+                            {u.role === "admin" ? "Admin" : u.role === "seller" ? "Sotuvchi" : "Xaridor"}
+                          </span>
+                        </div>
+
+                        {u.telegram_username && (
+                          <div className="card-meta-line">
+                            <span className="meta-label">Telegram:</span>
+                            <a
+                              href={`https://t.me/${u.telegram_username.replace("@", "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="table-tg-link"
+                            >
+                              @{u.telegram_username.replace("@", "")}
+                            </a>
+                          </div>
+                        )}
+
+                        <div className="card-role-action-box">
+                          <span className="role-action-title">Rolni boshqarish:</span>
+                          <div className="role-switch-btn-group full-width">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateUserRole(u.id, "buyer")}
+                              className={`btn-role-opt ${u.role === "buyer" || !u.role ? "active-buyer" : ""}`}
+                            >
+                              Xaridor
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateUserRole(u.id, "seller")}
+                              className={`btn-role-opt ${u.role === "seller" ? "active-seller" : ""}`}
+                            >
+                              Sotuvchi
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateUserRole(u.id, "admin")}
+                              className={`btn-role-opt ${u.role === "admin" ? "active-admin" : ""}`}
+                            >
+                              Admin
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1410,9 +1478,9 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Listings Table */}
+              {/* Listings Table (Desktop) & Cards (Mobile) */}
               <div className="admin-table-container">
-                <div className="table-responsive">
+                <div className="table-responsive desktop-table-view">
                   <table className="admin-custom-table">
                     <thead>
                       <tr>
@@ -1498,6 +1566,49 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Listings Cards List */}
+                <div className="mobile-cards-feed">
+                  {filteredListings.length === 0 ? (
+                    <div className="table-empty-td">E&apos;lonlar topilmadi</div>
+                  ) : (
+                    filteredListings.map((l) => (
+                      <div key={l.id} className="mobile-admin-data-card">
+                        <div className="card-top-row">
+                          <div>
+                            <div className="card-item-title">{l.title}</div>
+                            <div className="card-item-subtitle">{formatDate(l.created_at)}</div>
+                          </div>
+                          <div className="table-price-badge">${l.price}</div>
+                        </div>
+
+                        <div className="card-badges-flex">
+                          <span className="platform-tag">{getPlatformLabel(l.platform)}</span>
+                          <span className="table-ovr-badge">{l.team_rating || 0} OVR</span>
+                          <span className={`listing-status-tag status-${l.status}`}>{l.status}</span>
+                        </div>
+
+                        <div className="card-listing-footer">
+                          <span className="card-seller-label">
+                            Sotuvchi: <strong>{l.seller?.full_name || "Noma'lum"}</strong>
+                          </span>
+                          <div className="card-action-btns">
+                            <Link href={`/listings/${l.id}`} target="_blank" className="btn-table-view">
+                              <Eye size={14} />
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleListingStatus(l.id, l.status)}
+                              className={l.status === "active" ? "btn-toggle-deactivate" : "btn-toggle-activate"}
+                            >
+                              {l.status === "active" ? "O'chirish" : "Faollashtirish"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1515,7 +1626,7 @@ export default function AdminPage() {
               </div>
 
               <div className="admin-table-container">
-                <div className="table-responsive">
+                <div className="table-responsive desktop-table-view">
                   <table className="admin-custom-table">
                     <thead>
                       <tr>
@@ -1570,6 +1681,52 @@ export default function AdminPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Orders Feed */}
+                <div className="mobile-cards-feed">
+                  {orders.length === 0 ? (
+                    <div className="table-empty-td">Hozircha hech qanday buyurtma mavjud emas</div>
+                  ) : (
+                    orders.map((o) => (
+                      <div key={o.id} className="mobile-admin-data-card">
+                        <div className="card-top-row">
+                          <div>
+                            <span className="order-id-badge">#{o.id.slice(0, 8)}</span>
+                            <div className="card-item-title" style={{ marginTop: 4 }}>
+                              {o.listing?.title || "Akkount"}
+                            </div>
+                          </div>
+                          <div className="amount-td">${o.price || 0}</div>
+                        </div>
+
+                        <div className="card-meta-line">
+                          <span className="meta-label">Xaridor:</span>
+                          <span>{o.buyer?.full_name || o.buyer?.email || "Xaridor"}</span>
+                        </div>
+
+                        <div className="card-meta-line">
+                          <span className="meta-label">Sotuvchi:</span>
+                          <span>{o.seller?.full_name || o.seller?.email || "Sotuvchi"}</span>
+                        </div>
+
+                        <div className="card-listing-footer">
+                          <span className={`order-status-tag status-${o.status}`}>
+                            {o.status === "completed"
+                              ? "Yakunlangan"
+                              : o.status === "confirmed"
+                              ? "Tasdiqlangan"
+                              : o.status === "paid"
+                              ? "To'langan (Escrow)"
+                              : o.status === "delivered"
+                              ? "Yetkazildi"
+                              : o.status}
+                          </span>
+                          <span className="date-td">{formatDate(o.created_at)}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -2885,6 +3042,102 @@ export default function AdminPage() {
           .hidden-mobile-btn {
             display: none;
           }
+
+          .desktop-table-view {
+            display: none !important;
+          }
+          .mobile-cards-feed {
+            display: flex !important;
+            padding: 12px;
+          }
+        }
+
+        /* Mobile Data Cards */
+        .mobile-cards-feed {
+          display: none;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .mobile-admin-data-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 16px;
+          padding: 14px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .card-top-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .user-avatar-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .card-item-title {
+          font-weight: 700;
+          font-size: 14px;
+          color: #FFF;
+        }
+        .card-item-subtitle {
+          font-size: 11.5px;
+          color: rgba(156, 163, 175, 0.7);
+        }
+        .card-meta-line {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: rgba(209, 213, 219, 0.85);
+        }
+        .meta-label {
+          color: rgba(156, 163, 175, 0.6);
+          font-size: 11.5px;
+        }
+        .card-role-action-box {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 4px;
+          padding-top: 8px;
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .role-action-title {
+          font-size: 11px;
+          font-weight: 600;
+          color: rgba(156, 163, 175, 0.7);
+        }
+        .role-switch-btn-group.full-width {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 6px;
+          width: 100%;
+        }
+        .card-badges-flex {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .card-listing-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 8px;
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .card-seller-label {
+          font-size: 11.5px;
+          color: rgba(156, 163, 175, 0.8);
+        }
+        .card-action-btns {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         @keyframes pulseAnim {
