@@ -235,14 +235,20 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="user-profile-avatar-btn"
+                    className="user-profile-linear-btn"
                     aria-expanded={userDropdownOpen}
                     aria-label={`${displayName} hisobi`}
                   >
-                    <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
-                      {displayName.charAt(0).toUpperCase()}
+                    <div className="avatar-wrap">
+                      <div className={`avatar-bubble ${isSuperAdmin ? "admin-avatar" : isSeller ? "seller-avatar" : "buyer-avatar"}`}>
+                        {displayName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="trigger-online-dot" />
                     </div>
-                    <span className="trigger-online-dot" />
+
+                    <span className="user-linear-name">{displayName}</span>
+
+                    <ChevronDown size={13} className={`chevron-icon ${userDropdownOpen ? "rotated" : ""}`} />
                   </button>
 
                   {/* Profile Dropdown Menu */}
@@ -719,37 +725,46 @@ export function Navbar() {
         .user-profile-menu {
           position: relative;
         }
-        .user-profile-avatar-btn {
-          position: relative;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
+        .user-profile-linear-btn {
           background: transparent;
-          border: 2px solid rgba(255, 255, 255, 0.12);
-          padding: 0;
-          cursor: pointer;
+          border: none;
+          padding: 4px 6px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
-          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .user-profile-avatar-btn:hover {
-          border-color: #3B82F6;
-          transform: scale(1.06);
-          box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+        .user-profile-linear-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
         }
-        .user-profile-avatar-btn .avatar-bubble {
-          width: 100%;
-          height: 100%;
+        .user-profile-linear-btn:hover .user-linear-name {
+          color: #FFF;
+          text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+        }
+        .user-profile-linear-btn:hover .avatar-bubble {
+          transform: scale(1.05);
+          box-shadow: 0 0 14px rgba(37, 99, 235, 0.5);
+        }
+        .avatar-wrap {
+          position: relative;
+          width: 30px;
+          height: 30px;
+          flex-shrink: 0;
+        }
+        .avatar-bubble {
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #FFF;
           font-weight: 800;
-          font-size: 14px;
+          font-size: 13px;
           font-family: 'Outfit', sans-serif;
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
+          transition: all 0.2s ease;
         }
         .avatar-bubble.buyer-avatar {
           background: linear-gradient(135deg, #2563EB, #1D4ED8);
@@ -762,14 +777,34 @@ export function Navbar() {
         }
         .trigger-online-dot {
           position: absolute;
-          bottom: 0px;
-          right: 0px;
-          width: 9px;
-          height: 9px;
+          bottom: 0;
+          right: 0;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           background: #10B981;
           border: 2px solid #030712;
-          box-shadow: 0 0 6px #10B981;
+        }
+        .user-linear-name {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: rgba(243, 244, 246, 0.9);
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          letter-spacing: -0.01em;
+          transition: color 0.15s ease, text-shadow 0.15s ease;
+        }
+        .chevron-icon {
+          color: rgba(156, 163, 175, 0.6);
+          transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .user-profile-linear-btn:hover .chevron-icon {
+          color: #FFF;
+        }
+        .chevron-icon.rotated {
+          transform: rotate(180deg);
         }
 
         /* Profile Dropdown Panel */
