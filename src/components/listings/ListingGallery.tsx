@@ -1,20 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, ShieldCheck, Gamepad2, Monitor, Smartphone, Maximize2 } from "lucide-react";
-import { getPlatformLabel } from "@/lib/utils";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  Smartphone,
+  Maximize2,
+  X,
+  Sparkles,
+  Trophy,
+  Gamepad2,
+} from "lucide-react";
 
 interface ListingGalleryProps {
   images: string[] | null;
   title: string;
-  platform: string;
+  platform?: string;
   teamRating?: number | null;
 }
 
 export function ListingGallery({
   images,
   title,
-  platform,
+  platform = "mobile",
   teamRating,
 }: ListingGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -25,14 +34,6 @@ export function ListingGallery({
   );
   const hasImages = imageList.length > 0;
   const currentImage = hasImages ? imageList[activeIndex] || imageList[0] : null;
-
-  const platformIcons: Record<string, any> = {
-    ps: Gamepad2,
-    xbox: Gamepad2,
-    pc: Monitor,
-    mobile: Smartphone,
-  };
-  const PlatformIcon = platformIcons[platform] || Gamepad2;
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,92 +46,105 @@ export function ListingGallery({
   };
 
   return (
-    <div className="listing-gallery-wrapper">
-      {/* Main Image Showcase */}
+    <div className="g2g-gallery-root">
+      {/* Main Image Showcase Frame */}
       <div
-        className="gallery-main-showcase"
+        className="gallery-frame"
         onClick={() => currentImage && setFullscreenImage(currentImage)}
       >
         {hasImages && currentImage ? (
           <>
-            <img src={currentImage} alt={title} className="gallery-main-img" />
+            <img src={currentImage} alt={title} className="gallery-main-photo" />
+            <div className="gallery-overlay-gradient" />
             <button
               type="button"
-              className="gallery-zoom-btn"
+              className="gallery-zoom-trigger"
               title="Kattalashtirib ko'rish"
             >
-              <Maximize2 size={15} />
+              <Maximize2 size={16} />
             </button>
           </>
         ) : (
-          <div className="detail-fallback-banner">
-            <div className="fallback-bg-art" />
-            <div className="fallback-meta">
-              <span className="fallback-pill">
-                <PlatformIcon size={14} /> {getPlatformLabel(platform)}
-              </span>
-              <span className="fallback-ovr-text">
-                {teamRating ? `${teamRating} OVR Rating` : "eFootball Hisob"}
-              </span>
+          /* High-End eFootball Stadium Fallback Card */
+          <div className="gallery-stadium-fallback">
+            <div className="fallback-watermark">EFB</div>
+            <div className="fallback-glow-orb" />
+
+            <div className="fallback-inner-content">
+              <div className="fallback-top-row">
+                <span className="fallback-pill-badge">
+                  <Smartphone size={13} /> Android & iOS (Universal)
+                </span>
+                <span className="fallback-escrow-pill">
+                  <ShieldCheck size={13} className="text-emerald" /> 100% Escrow Himoya
+                </span>
+              </div>
+
+              <div className="fallback-center-hero">
+                <div className="fallback-ovr-circle">
+                  <span className="ovr-lbl">OVR</span>
+                  <span className="ovr-num">{teamRating || "3200+"}</span>
+                </div>
+                <div className="fallback-text-stack">
+                  <h3 className="fallback-title">{title}</h3>
+                  <p className="fallback-sub">eFootball 2026 Mobile Rasmiy Hisobi</p>
+                </div>
+              </div>
+
+              <div className="fallback-bottom-row">
+                <div className="fallback-feature-item">
+                  <Sparkles size={13} className="text-amber" />
+                  <span>Konami ID to&apos;liq topshiriladi</span>
+                </div>
+                <div className="fallback-feature-item">
+                  <Trophy size={13} className="text-blue" />
+                  <span>1-Divizion Pro tarkib</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Carousel Navigation Arrows if multiple images */}
         {imageList.length > 1 && (
-          <div className="gallery-nav-arrows">
+          <div className="gallery-controls-bar">
             <button
               type="button"
               onClick={handlePrev}
-              className="btn-gallery-arrow prev"
+              className="gallery-nav-btn prev"
               aria-label="Oldingi rasm"
             >
               <ChevronLeft size={20} />
             </button>
 
-            <span className="gallery-counter-tag">
+            <span className="gallery-photo-counter">
               {activeIndex + 1} / {imageList.length}
             </span>
 
             <button
               type="button"
               onClick={handleNext}
-              className="btn-gallery-arrow next"
+              className="gallery-nav-btn next"
               aria-label="Keyingi rasm"
             >
               <ChevronRight size={20} />
             </button>
           </div>
         )}
-
-        {/* Floating Badges */}
-        <div className="hero-top-badges">
-          <span className="badge-platform-tag">
-            <PlatformIcon size={13} /> {getPlatformLabel(platform)}
-          </span>
-          {teamRating && (
-            <span className="badge-ovr-tag">🔥 {teamRating} OVR</span>
-          )}
-        </div>
-
-        <div className="hero-bottom-guarantee">
-          <ShieldCheck size={14} className="text-emerald" />
-          <span>100% Escrow Himoyalangan</span>
-        </div>
       </div>
 
-      {/* Thumbnail Strip (1 to 6 images) */}
+      {/* Thumbnails Carousel (if multiple images) */}
       {imageList.length > 1 && (
-        <div className="gallery-thumbs-row">
+        <div className="gallery-thumbnails-track">
           {imageList.map((imgUrl, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setActiveIndex(idx)}
-              className={`gallery-thumb-btn ${activeIndex === idx ? "active" : ""}`}
+              className={`thumbnail-card ${activeIndex === idx ? "active" : ""}`}
             >
-              <img src={imgUrl} alt={`${title} skrinshot ${idx + 1}`} className="thumb-strip-img" />
-              {idx === 0 && <span className="thumb-main-label">Muqova</span>}
+              <img src={imgUrl} alt={`${title} rasm ${idx + 1}`} className="thumb-img" />
+              {idx === 0 && <span className="thumb-badge">Asosiy</span>}
             </button>
           ))}
         </div>
@@ -138,86 +152,72 @@ export function ListingGallery({
 
       {/* Fullscreen Lightbox Modal */}
       {fullscreenImage && (
-        <div className="lightbox-overlay" onClick={() => setFullscreenImage(null)}>
-          <div className="lightbox-modal-box" onClick={(e) => e.stopPropagation()}>
-            <img src={fullscreenImage} alt={title} className="lightbox-full-img" />
-            <button
-              type="button"
-              onClick={() => setFullscreenImage(null)}
-              className="lightbox-close-btn"
-            >
-              ✕
-            </button>
-          </div>
+        <div className="lightbox-modal-backdrop" onClick={() => setFullscreenImage(null)}>
+          <button
+            type="button"
+            className="lightbox-close-btn"
+            onClick={() => setFullscreenImage(null)}
+            aria-label="Yopish"
+          >
+            <X size={24} />
+          </button>
+          <img
+            src={fullscreenImage}
+            alt={title}
+            className="lightbox-full-img"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 
       <style jsx>{`
-        .listing-gallery-wrapper {
+        .g2g-gallery-root {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          margin-bottom: 20px;
+          gap: 14px;
         }
-        .gallery-main-showcase {
+
+        .gallery-frame {
           position: relative;
-          aspect-ratio: 16 / 9;
-          max-height: 440px;
-          border-radius: 20px;
-          overflow: hidden;
-          background: #0B0F19;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-          cursor: pointer;
-        }
-        .gallery-main-img {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.3s ease;
-        }
-        .gallery-main-showcase:hover .gallery-main-img {
-          transform: scale(1.02);
-        }
-        .gallery-zoom-btn {
-          position: absolute;
-          top: 14px;
-          right: 14px;
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          color: #FFF;
+          height: 380px;
+          border-radius: 18px;
+          overflow: hidden;
+          background: linear-gradient(135deg, #0B132B 0%, #030712 100%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+          cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
-          opacity: 0;
-          transition: opacity 0.2s ease;
-          z-index: 10;
-        }
-        .gallery-main-showcase:hover .gallery-zoom-btn {
-          opacity: 1;
         }
 
-        .gallery-nav-arrows {
+        .gallery-main-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.3s ease;
+        }
+        .gallery-frame:hover .gallery-main-photo {
+          transform: scale(1.02);
+        }
+
+        .gallery-overlay-gradient {
           position: absolute;
           inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 14px;
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
           pointer-events: none;
-          z-index: 8;
         }
-        .btn-gallery-arrow {
-          pointer-events: auto;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.65);
+
+        .gallery-zoom-trigger {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           color: #FFF;
@@ -226,215 +226,297 @@ export function ListingGallery({
           justify-content: center;
           cursor: pointer;
           transition: all 0.2s ease;
+          z-index: 3;
         }
-        .btn-gallery-arrow:hover {
-          background: rgba(37, 99, 235, 0.85);
+        .gallery-zoom-trigger:hover {
+          background: #2563EB;
           border-color: #2563EB;
           transform: scale(1.08);
         }
-        .gallery-counter-tag {
-          position: absolute;
-          bottom: 14px;
-          right: 14px;
-          background: rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(6px);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #FFF;
-          font-size: 11.5px;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 999px;
-        }
 
-        .hero-top-badges {
-          position: absolute;
-          top: 14px;
-          left: 14px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          z-index: 5;
-        }
-        .badge-platform-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 5px 10px;
-          border-radius: 8px;
-          background: rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #FFF;
-          font-size: 11.5px;
-          font-weight: 700;
-        }
-        .badge-ovr-tag {
-          padding: 5px 10px;
-          border-radius: 8px;
-          background: rgba(37, 99, 235, 0.85);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          color: #FFF;
-          font-size: 11.5px;
-          font-weight: 800;
-        }
-
-        .hero-bottom-guarantee {
-          position: absolute;
-          bottom: 14px;
-          left: 14px;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 5px 10px;
-          border-radius: 8px;
-          background: rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          color: #34D399;
-          font-size: 11px;
-          font-weight: 700;
-          z-index: 5;
-        }
-
-        /* Fallback Art */
-        .detail-fallback-banner {
+        /* High-End eFootball Stadium Fallback */
+        .gallery-stadium-fallback {
+          position: relative;
           width: 100%;
           height: 100%;
-          position: relative;
-          background: radial-gradient(circle at 50% 50%, #1e293b 0%, #030712 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .fallback-bg-art {
-          position: absolute;
-          inset: 0;
-          background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-          background-size: 24px 24px;
-        }
-        .fallback-meta {
-          position: relative;
-          z-index: 2;
+          padding: 28px;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 8px;
+          justify-content: space-between;
+          background: radial-gradient(circle at 50% 30%, #1E1B4B 0%, #0F172A 60%, #020617 100%);
+          overflow: hidden;
         }
-        .fallback-pill {
+
+        .fallback-watermark {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-family: 'Outfit', sans-serif;
+          font-size: 160px;
+          font-weight: 900;
+          color: rgba(255, 255, 255, 0.03);
+          letter-spacing: 0.1em;
+          pointer-events: none;
+          user-select: none;
+        }
+
+        .fallback-glow-orb {
+          position: absolute;
+          top: -20%;
+          right: -10%;
+          width: 250px;
+          height: 250px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
+          filter: blur(30px);
+          pointer-events: none;
+        }
+
+        .fallback-inner-content {
+          position: relative;
+          z-index: 2;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .fallback-top-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .fallback-pill-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 14px;
           border-radius: 999px;
-          background: rgba(37, 99, 235, 0.2);
-          border: 1px solid rgba(37, 99, 235, 0.4);
-          color: #60A5FA;
-          font-size: 12px;
-          font-weight: 700;
-        }
-        .fallback-ovr-text {
-          font-family: 'Outfit', sans-serif;
-          font-size: 22px;
-          font-weight: 800;
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          font-size: 12.5px;
+          font-weight: 600;
           color: #FFF;
         }
 
-        /* Thumbnail Strip */
-        .gallery-thumbs-row {
+        .fallback-escrow-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 999px;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #34D399;
+        }
+
+        .fallback-center-hero {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .fallback-ovr-circle {
+          width: 84px;
+          height: 84px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .ovr-lbl {
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          color: rgba(0, 0, 0, 0.6);
+        }
+
+        .ovr-num {
+          font-family: 'Outfit', sans-serif;
+          font-size: 24px;
+          font-weight: 900;
+          color: #000;
+          line-height: 1;
+        }
+
+        .fallback-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 24px;
+          font-weight: 800;
+          color: #FFF;
+          margin: 0 0 6px 0;
+          letter-spacing: -0.01em;
+        }
+
+        .fallback-sub {
+          font-size: 13.5px;
+          color: rgba(199, 210, 254, 0.85);
+          margin: 0;
+        }
+
+        .fallback-bottom-row {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .fallback-feature-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12.5px;
+          color: rgba(229, 231, 235, 0.85);
+          font-weight: 500;
+        }
+
+        /* Carousel Navigation Controls */
+        .gallery-controls-bar {
+          position: absolute;
+          bottom: 16px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          padding: 6px 12px;
+          border-radius: 999px;
+          z-index: 3;
+        }
+
+        .gallery-nav-btn {
+          background: none;
+          border: none;
+          color: #FFF;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          opacity: 0.8;
+          transition: opacity 0.15s ease;
+        }
+        .gallery-nav-btn:hover {
+          opacity: 1;
+        }
+
+        .gallery-photo-counter {
+          font-size: 12px;
+          font-weight: 700;
+          color: #FFF;
+          padding: 0 4px;
+        }
+
+        /* Thumbnails Strip */
+        .gallery-thumbnails-track {
           display: flex;
           align-items: center;
           gap: 10px;
           overflow-x: auto;
           scrollbar-width: none;
-          padding: 2px 0;
+          padding-bottom: 4px;
         }
-        .gallery-thumbs-row::-webkit-scrollbar {
-          display: none;
-        }
-        .gallery-thumb-btn {
+
+        .thumbnail-card {
           position: relative;
           width: 80px;
           height: 56px;
           border-radius: 10px;
           overflow: hidden;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
+          background: #0F172A;
+          border: 2px solid transparent;
           cursor: pointer;
-          flex-shrink: 0;
           padding: 0;
+          flex-shrink: 0;
           transition: all 0.15s ease;
         }
-        .gallery-thumb-btn:hover {
-          border-color: rgba(37, 99, 235, 0.6);
+        .thumbnail-card:hover {
+          border-color: rgba(255, 255, 255, 0.3);
         }
-        .gallery-thumb-btn.active {
-          border-color: #2563EB;
-          box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
-          transform: translateY(-2px);
+        .thumbnail-card.active {
+          border-color: #3B82F6;
+          box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
         }
-        .thumb-strip-img {
+
+        .thumb-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
-        .thumb-main-label {
+
+        .thumb-badge {
           position: absolute;
           bottom: 2px;
-          left: 2px;
           right: 2px;
-          background: rgba(37, 99, 235, 0.85);
-          color: #FFF;
-          font-size: 8px;
-          font-weight: 800;
-          text-align: center;
+          background: rgba(0, 0, 0, 0.7);
+          font-size: 9px;
+          font-weight: 700;
+          padding: 1px 4px;
           border-radius: 4px;
-          padding: 1px 0;
+          color: #FFF;
         }
 
-        /* Lightbox */
-        .lightbox-overlay {
+        /* Lightbox Modal */
+        .lightbox-modal-backdrop {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.9);
+          background: rgba(0, 0, 0, 0.92);
           backdrop-filter: blur(16px);
-          z-index: 1000;
+          z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 20px;
+          padding: 24px;
         }
-        .lightbox-modal-box {
-          position: relative;
-          max-width: 90vw;
-          max-height: 85vh;
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
-        }
-        .lightbox-full-img {
-          width: 100%;
-          height: auto;
-          max-height: 85vh;
-          object-fit: contain;
-        }
+
         .lightbox-close-btn {
           position: absolute;
-          top: 14px;
-          right: 14px;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.7);
+          top: 24px;
+          right: 24px;
+          background: rgba(255, 255, 255, 0.1);
           border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+          width: 44px;
+          height: 44px;
           color: #FFF;
-          font-size: 16px;
-          cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
+        .lightbox-close-btn:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: scale(1.1);
+        }
+
+        .lightbox-full-img {
+          max-width: 90vw;
+          max-height: 85vh;
+          object-fit: contain;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .text-emerald { color: #34D399; }
+        .text-amber { color: #FBBF24; }
+        .text-blue { color: #60A5FA; }
       `}</style>
     </div>
   );

@@ -6,19 +6,18 @@ import {
   Clock,
   CheckCircle,
   Star,
-  Gamepad2,
-  Monitor,
   Smartphone,
   Zap,
   Sparkles,
   Award,
   Lock,
   MessageCircle,
-  HelpCircle,
-  Share2,
   ShieldCheck,
   ArrowRight,
   Coins,
+  KeyRound,
+  Trophy,
+  Check,
 } from "lucide-react";
 import { fetchListingById } from "@/lib/dataService";
 import { getPlatformLabel, formatDate } from "@/lib/utils";
@@ -34,8 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const listing = await fetchListingById(id);
   if (!listing) return { title: "E'lon topilmadi | EFZone" };
   return {
-    title: `${listing.title} | EFZone Marketplace`,
-    description: listing.description || `eFootball hisob — $${listing.price}`,
+    title: `${listing.title} | eFootball Akkaunt Bozori`,
+    description: listing.description || `eFootball 2026 hisobi — $${listing.price}`,
   };
 }
 
@@ -45,34 +44,26 @@ export default async function ListingDetailPage({ params }: Props) {
 
   if (!listing) notFound();
 
-  const isAccount = listing.type === "account";
   const UZS_EXCHANGE_RATE = 13000;
   const priceUzs = Math.round(listing.price * UZS_EXCHANGE_RATE).toLocaleString("uz-UZ");
 
   return (
-    <div className="listing-detail-root">
-      <div className="container detail-container">
+    <div className="g2g-detail-root">
+      <div className="container">
         {/* Breadcrumb Navigation */}
-        <div className="detail-breadcrumb">
-          <Link href="/listings" className="breadcrumb-back-link">
-            <ArrowLeft size={14} /> E&apos;lonlar
-          </Link>
-          <span className="sep">/</span>
-          <Link
-            href={`/listings?platform=${listing.platform}`}
-            className="breadcrumb-platform-link"
-          >
-            {getPlatformLabel(listing.platform)}
-          </Link>
-          <span className="sep">/</span>
-          <span className="breadcrumb-current-title">{listing.title}</span>
+        <div className="g2g-breadcrumbs">
+          <Link href="/">Bosh sahifa</Link>
+          <span className="crumb-sep">›</span>
+          <Link href="/listings">eFootball Akkauntlari</Link>
+          <span className="crumb-sep">›</span>
+          <span className="crumb-active">#{listing.id.slice(0, 8)}</span>
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="detail-main-grid">
-          {/* Left Column: Image Gallery, Specs, Details */}
-          <div className="detail-content-left">
-            {/* Interactive Image Gallery (1-6 images with thumbnails) */}
+        <div className="detail-layout-grid">
+          {/* Left Column: Visual Showcase, Specs & Escrow Steps */}
+          <div className="detail-left-pane">
+            {/* 1. Gallery Showcase */}
             <ListingGallery
               images={listing.images}
               title={listing.title}
@@ -80,153 +71,185 @@ export default async function ListingDetailPage({ params }: Props) {
               teamRating={listing.team_rating}
             />
 
-            {/* Title & Key Specs Header */}
-            <div className="detail-title-card">
-              <h1 className="detail-main-heading">{listing.title}</h1>
+            {/* 2. Main Title & Key Specs Header */}
+            <div className="account-overview-card">
+              <div className="overview-top-badge-row">
+                <span className="platform-tag">
+                  <Smartphone size={13} /> Android & iOS (Universal)
+                </span>
+                <span className="escrow-safe-tag">
+                  <ShieldCheck size={13} className="text-emerald" /> 100% Escrow Himoyalangan
+                </span>
+              </div>
 
-              {/* Specs Grid */}
-              <div className="detail-specs-grid">
-                {listing.team_rating && (
-                  <div className="spec-stat-card">
-                    <span className="stat-label">Jamoa Reytingi</span>
-                    <span className="stat-value text-blue">
-                      ⭐ {listing.team_rating}
-                    </span>
-                  </div>
-                )}
-                {listing.coin_balance && (
-                  <div className="spec-stat-card">
-                    <span className="stat-label">Coin Balansi</span>
-                    <span className="stat-value text-amber">
-                      🪙 {listing.coin_balance.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                {listing.gp_balance && (
-                  <div className="spec-stat-card">
-                    <span className="stat-label">GP Balans</span>
-                    <span className="stat-value">
-                      ⚽ {(listing.gp_balance / 1000000).toFixed(1)}M GP
-                    </span>
-                  </div>
-                )}
-                <div className="spec-stat-card">
-                  <span className="stat-label">Yetkazib Berish</span>
-                  <span className="stat-value text-emerald">
-                    <Clock size={15} /> {listing.delivery_time || "15-30 daqiqa"}
+              <h1 className="account-main-title">{listing.title}</h1>
+
+              {/* 6-Grid Account Specifications */}
+              <div className="specs-stats-6grid">
+                <div className="stat-box-card">
+                  <span className="stat-lbl">Jamoa OVR</span>
+                  <span className="stat-num text-amber">
+                    🔥 {listing.team_rating || "3200+"} OVR
+                  </span>
+                </div>
+
+                <div className="stat-box-card">
+                  <span className="stat-lbl">Coin Balansi</span>
+                  <span className="stat-num text-blue">
+                    🪙 {listing.coin_balance ? `${listing.coin_balance.toLocaleString()} Coins` : "0 Coin"}
+                  </span>
+                </div>
+
+                <div className="stat-box-card">
+                  <span className="stat-lbl">GP Balans</span>
+                  <span className="stat-num text-emerald">
+                    ⚽ {listing.gp_balance ? `${(listing.gp_balance / 1000000).toFixed(1)}M GP` : "Mavjud"}
+                  </span>
+                </div>
+
+                <div className="stat-box-card">
+                  <span className="stat-lbl">Bog&apos;lanish</span>
+                  <span className="stat-num">
+                    🔑 Konami ID (To&apos;liq beriladi)
+                  </span>
+                </div>
+
+                <div className="stat-box-card">
+                  <span className="stat-lbl">Divizion</span>
+                  <span className="stat-num">
+                    🏆 1-Divizion Pro
+                  </span>
+                </div>
+
+                <div className="stat-box-card">
+                  <span className="stat-lbl">Yetkazish Tezligi</span>
+                  <span className="stat-num text-emerald">
+                    ⚡ {listing.delivery_time || "10-15 daqiqa"}
                   </span>
                 </div>
               </div>
+            </div>
 
-              {/* Key Featured Players */}
-              {listing.key_players && listing.key_players.length > 0 && (
-                <div className="featured-players-box">
-                  <div className="box-title-row">
-                    <Award size={17} className="text-amber" />
-                    <span>Tarkibdagi Sara Yulduzlar</span>
-                  </div>
-                  <div className="players-chip-grid">
-                    {listing.key_players.map((player) => (
-                      <div key={player} className="player-badge-chip">
-                        <Sparkles size={14} className="text-blue" />
-                        <span>{player}</span>
-                      </div>
-                    ))}
-                  </div>
+            {/* 3. Featured Star Players (if present) */}
+            {listing.key_players && listing.key_players.length > 0 && (
+              <div className="star-players-card">
+                <div className="card-section-head">
+                  <Award size={18} className="text-amber" />
+                  <span className="head-title">Tarkibdagi Sara Yulduzlar & Afsonalar</span>
                 </div>
-              )}
-
-              {/* Description Box */}
-              <div className="detail-desc-box">
-                <h3 className="desc-heading">E&apos;lon Haqida Batafsil</h3>
-                <div className="desc-content">
-                  {listing.description || "Ushbu akkount to'liq tekshirilgan va xarid qilishga tayyor."}
+                <div className="players-chips-wrap">
+                  {listing.key_players.map((player) => (
+                    <div key={player} className="player-gold-chip">
+                      <Sparkles size={14} className="text-amber" />
+                      <span>{player}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Guarantee Card */}
-              <div className="escrow-guarantee-card">
-                <div className="guarantee-head">
-                  <ShieldCheck size={20} className="text-emerald" />
-                  <span className="guarantee-title">
-                    Xaridor Xavfsizlik Kafolati (Escrow)
-                  </span>
+            {/* 4. Full Description & Seller Transfer Notes */}
+            <div className="account-desc-card">
+              <div className="card-section-head">
+                <span className="head-title">E&apos;lon Tavsifi va Qoidalar</span>
+              </div>
+              <div className="desc-body-text">
+                {listing.description || "Ushbu akkount to'liq tekshirilgan va xarid qilishga tayyor. Xariddan so'ng Konami ID pochta va paroli darhol topshiriladi."}
+              </div>
+            </div>
+
+            {/* 5. 4-Step Escrow Process Timeline */}
+            <div className="escrow-process-card">
+              <div className="card-section-head">
+                <ShieldCheck size={18} className="text-emerald" />
+                <span className="head-title">Xavfsiz Xarid Qanday Amalga Oshiriladi?</span>
+              </div>
+
+              <div className="escrow-timeline-steps">
+                <div className="step-item">
+                  <div className="step-num">1</div>
+                  <div className="step-content">
+                    <h4>To&apos;lov qilasiz</h4>
+                    <p>Mablag&apos;ingiz sotuvchiga o&apos;tmaydi, xavfsiz admin depozitida muzlatiladi.</p>
+                  </div>
                 </div>
-                <div className="guarantee-items-grid">
-                  <div className="guarantee-point">
-                    <CheckCircle size={15} className="text-emerald" />
-                    <span>Konami ID to&apos;liq topshiriladi</span>
+
+                <div className="step-item">
+                  <div className="step-num">2</div>
+                  <div className="step-content">
+                    <h4>Sotuvchi ma&apos;lumotlarni beradi</h4>
+                    <p>Sotuvchi sizga Konami ID login va parolini chat orqali taqdim etadi.</p>
                   </div>
-                  <div className="guarantee-point">
-                    <CheckCircle size={15} className="text-emerald" />
-                    <span>Pochta o&apos;zgartirish imkoniyati</span>
+                </div>
+
+                <div className="step-item">
+                  <div className="step-num">3</div>
+                  <div className="step-content">
+                    <h4>Akkauntni tekshirasiz</h4>
+                    <p>O&apos;yinga kirib tarkibni tekshirasiz va barcha parollarni o&apos;zingizga o&apos;zgartirasiz.</p>
                   </div>
-                  <div className="guarantee-point">
-                    <CheckCircle size={15} className="text-emerald" />
-                    <span>24 soat nizo ochish huquqi</span>
-                  </div>
-                  <div className="guarantee-point">
-                    <CheckCircle size={15} className="text-emerald" />
-                    <span>100% pul qaytarish kafolati</span>
+                </div>
+
+                <div className="step-item">
+                  <div className="step-num">4</div>
+                  <div className="step-content">
+                    <h4>Tasdiqlaysiz va yakunlanadi</h4>
+                    <p>Siz tasdiqlaganingizdan so&apos;nggina pul sotuvchiga o&apos;tkaziladi.</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Checkout Purchase Box */}
-          <div className="detail-checkout-sidebar">
-            <div className="checkout-action-card">
-              <div className="price-summary-row">
-                <div className="price-meta-label">Xarid Narxi</div>
-                <div className="price-hero-stack">
-                  <span className="price-big-usd">${listing.price}</span>
-                  <span className="price-sub-uzs">≈ {priceUzs} so&apos;m</span>
+          {/* Right Column: Sticky G2G Buy Box & Seller Profile */}
+          <div className="detail-right-pane">
+            <div className="sticky-buy-box">
+              {/* Price Header */}
+              <div className="buy-price-block">
+                <span className="price-lbl">Xarid narxi (Escrow Kafolati bilan)</span>
+                <div className="price-row-main">
+                  <span className="price-usd">${listing.price}</span>
+                  <span className="price-cur">USD</span>
+                </div>
+                <span className="price-uzs">≈ {priceUzs} so&apos;m</span>
+              </div>
+
+              {/* Trust Checkpoints */}
+              <div className="buy-trust-checklist">
+                <div className="trust-item">
+                  <Check size={14} className="text-emerald" />
+                  <span>100% Escrow xavfsiz to&apos;lov tizimi</span>
+                </div>
+                <div className="trust-item">
+                  <Check size={14} className="text-emerald" />
+                  <span>24 soatlik to&apos;liq pul qaytarish kafolati</span>
+                </div>
+                <div className="trust-item">
+                  <Check size={14} className="text-emerald" />
+                  <span>Tezkor yetkazish ({listing.delivery_time || "10-15 daqiqa"})</span>
                 </div>
               </div>
 
-              <div className="checkout-checklist">
-                <div className="check-row">
-                  <span className="label">Platforma</span>
-                  <span className="val">{getPlatformLabel(listing.platform)}</span>
-                </div>
-                <div className="check-row">
-                  <span className="label">Yetkazib berish</span>
-                  <span className="val text-emerald">
-                    {listing.delivery_time || "15-30 daqiqa"}
-                  </span>
-                </div>
-                <div className="check-row">
-                  <span className="label">Kafolat muddati</span>
-                  <span className="val">24 soat to&apos;liq himoya</span>
-                </div>
-              </div>
-
-              {/* Buy Button */}
-              <Link
-                href={`/checkout/${listing.id}`}
-                className="btn-instant-buy"
-              >
+              {/* Primary Buy CTA Button */}
+              <Link href={`/checkout/${listing.id}`} className="btn-g2g-buy-cta">
                 <Lock size={17} />
                 <span>Hoziroq Xarid Qilish</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={17} />
               </Link>
 
-              {/* Seller Information */}
-              <div className="seller-summary-block">
-                <div className="seller-block-label">Sotuvchi Ma&apos;lumotlari</div>
-                <div className="seller-profile-row">
-                  <div className="seller-bubble-av">
+              {/* Seller Profile Block */}
+              <div className="buy-seller-section">
+                <div className="seller-label-muted">Sotuvchi Ma&apos;lumotlari</div>
+                <div className="seller-card-row">
+                  <div className="seller-avatar-initial">
                     {(listing.seller?.full_name || "S").charAt(0).toUpperCase()}
                   </div>
-                  <div className="seller-info-stack">
-                    <div className="seller-verified-name">
-                      <span>{listing.seller?.full_name || "Tasdiqlangan Sotuvchi"}</span>
-                      <ShieldCheck size={14} className="text-emerald" />
+                  <div className="seller-details-stack">
+                    <div className="seller-name-row">
+                      <span className="seller-name">{listing.seller?.full_name || "Pro Seller"}</span>
+                      <ShieldCheck size={14} className="text-blue" />
                     </div>
-                    <div className="seller-sub-stats">
-                      5.0 ⭐ · 100% Ishonchli Sotuvchi
-                    </div>
+                    <span className="seller-rating-pill">⭐ 5.0 · 100% Ishonchli Sotuvchi</span>
                   </div>
                 </div>
 
@@ -235,12 +258,20 @@ export default async function ListingDetailPage({ params }: Props) {
                     href={`https://t.me/${listing.seller.telegram_username.replace("@", "")}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="seller-tg-btn"
+                    className="btn-seller-tg-chat"
                   >
-                    <MessageCircle size={14} />
-                    <span>Sotuvchiga Savol Berish (@{listing.seller.telegram_username.replace("@", "")})</span>
+                    <MessageCircle size={15} />
+                    <span>Telegramda bog&apos;lanish (@{listing.seller.telegram_username.replace("@", "")})</span>
                   </a>
                 )}
+              </div>
+
+              {/* Buyer Guarantee Box */}
+              <div className="buyer-protection-note">
+                <Shield size={16} className="text-emerald" />
+                <p>
+                  Sizning pulingiz xavfsiz. Akkauntni qabul qilib olib, to&apos;liq tasdiqlamaguningizcha mablag&apos; admin depozitida saqlanadi.
+                </p>
               </div>
             </div>
           </div>
@@ -248,453 +279,443 @@ export default async function ListingDetailPage({ params }: Props) {
       </div>
 
       <style>{`
-        .listing-detail-root {
-          padding-top: 88px;
+        .g2g-detail-root {
+          padding: 104px 0 80px 0;
           min-height: 100vh;
-          background: #030712;
-          color: #FFF;
-          font-family: 'Inter', sans-serif;
         }
 
-        .detail-container {
-          padding-top: 24px;
-          padding-bottom: 80px;
-        }
-
-        .detail-breadcrumb {
+        /* Breadcrumbs */
+        .g2g-breadcrumbs {
           display: flex;
           align-items: center;
           gap: 8px;
+          font-size: 12.5px;
+          color: rgba(156, 163, 175, 0.75);
           margin-bottom: 24px;
-          font-size: 13.5px;
-          color: rgba(156, 163, 175, 0.8);
-          flex-wrap: wrap;
         }
-        .breadcrumb-back-link, .breadcrumb-platform-link {
-          color: rgba(209, 213, 219, 0.85);
+        .g2g-breadcrumbs a {
+          color: rgba(156, 163, 175, 0.75);
           text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          transition: color 0.15s;
+          transition: color 0.15s ease;
         }
-        .breadcrumb-back-link:hover, .breadcrumb-platform-link:hover {
-          color: #60A5FA;
-        }
-        .breadcrumb-current-title {
+        .g2g-breadcrumbs a:hover {
           color: #FFF;
+        }
+        .crumb-sep {
+          color: rgba(255, 255, 255, 0.2);
+        }
+        .crumb-active {
+          color: #60A5FA;
           font-weight: 600;
         }
-        .sep { color: rgba(156, 163, 175, 0.4); }
 
-        .detail-main-grid {
+        /* Main 2-Column Layout */
+        .detail-layout-grid {
           display: grid;
           grid-template-columns: 1fr 380px;
-          gap: 32px;
+          gap: 28px;
           align-items: start;
         }
 
-        .detail-hero-image-box {
-          width: 100%;
-          height: 360px;
-          border-radius: 24px;
-          overflow: hidden;
-          background: rgba(10, 16, 32, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 24px;
-        }
-
-        .detail-main-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .detail-fallback-banner {
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, #091228 0%, #152244 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-        .fallback-bg-art {
-          position: absolute;
-          inset: 0;
-          background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-        .fallback-meta {
-          position: relative;
-          z-index: 2;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-        }
-        .fallback-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(37, 99, 235, 0.25);
-          border: 1px solid rgba(59, 130, 246, 0.4);
-          padding: 4px 12px;
-          border-radius: 999px;
-          font-size: 12px;
-          color: #93C5FD;
-          font-weight: 700;
-        }
-        .fallback-ovr-text {
-          font-family: 'Outfit', sans-serif;
-          font-size: 24px;
-          font-weight: 800;
-          color: #FFF;
-        }
-
-        .hero-top-badges {
-          position: absolute;
-          top: 14px;
-          left: 14px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          z-index: 3;
-        }
-        .badge-platform-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          background: rgba(8, 14, 30, 0.85);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: #FFF;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 8px;
-        }
-        .badge-ovr-tag {
-          background: #F59E0B;
-          color: #000;
-          font-size: 12px;
-          font-weight: 800;
-          padding: 4px 10px;
-          border-radius: 8px;
-        }
-
-        .hero-bottom-guarantee {
-          position: absolute;
-          bottom: 14px;
-          right: 14px;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(8, 14, 30, 0.88);
-          backdrop-filter: blur(14px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #34D399;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 5px 12px;
-          border-radius: 8px;
-          z-index: 3;
-        }
-
-        .detail-title-card {
+        .detail-left-pane {
           display: flex;
           flex-direction: column;
           gap: 20px;
+          min-width: 0;
         }
 
-        .detail-main-heading {
+        /* Account Overview Card */
+        .account-overview-card {
+          background: rgba(14, 22, 42, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 18px;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .overview-top-badge-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .platform-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          font-size: 12px;
+          font-weight: 600;
+          color: #FFF;
+        }
+
+        .escrow-safe-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 999px;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          font-size: 12px;
+          font-weight: 700;
+          color: #34D399;
+        }
+
+        .account-main-title {
           font-family: 'Outfit', sans-serif;
-          font-size: clamp(22px, 3vw, 30px);
+          font-size: 26px;
           font-weight: 800;
           color: #FFF;
-          line-height: 1.25;
           margin: 0;
-          letter-spacing: -0.02em;
+          line-height: 1.3;
         }
 
-        .detail-specs-grid {
+        /* 6-Grid Stats */
+        .specs-stats-6grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 12px;
         }
-        .spec-stat-card {
-          background: rgba(10, 16, 32, 0.7);
-          border: 1px solid rgba(255, 255, 255, 0.07);
-          border-radius: 14px;
+
+        .stat-box-card {
+          background: rgba(6, 11, 24, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 12px;
           padding: 12px 14px;
           display: flex;
           flex-direction: column;
           gap: 4px;
         }
-        .stat-label {
+
+        .stat-lbl {
           font-size: 11px;
-          color: rgba(156, 163, 175, 0.8);
+          text-transform: uppercase;
           font-weight: 600;
-        }
-        .stat-value {
-          font-family: 'Outfit', sans-serif;
-          font-size: 18px;
-          font-weight: 800;
-          color: #FFF;
-          display: flex;
-          align-items: center;
-          gap: 5px;
+          color: rgba(156, 163, 175, 0.75);
+          letter-spacing: 0.04em;
         }
 
-        .featured-players-box {
-          background: rgba(10, 16, 32, 0.7);
-          border: 1px solid rgba(255, 255, 255, 0.07);
-          border-radius: 18px;
-          padding: 18px 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .box-title-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
+        .stat-num {
+          font-family: 'Outfit', sans-serif;
+          font-size: 14.5px;
           font-weight: 700;
           color: #FFF;
         }
-        .players-chip-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .player-badge-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(37, 99, 235, 0.12);
-          border: 1px solid rgba(37, 99, 235, 0.25);
-          color: #93C5FD;
-          font-size: 13px;
-          font-weight: 600;
-          padding: 6px 12px;
-          border-radius: 8px;
-        }
 
-        .detail-desc-box {
-          background: rgba(10, 16, 32, 0.7);
-          border: 1px solid rgba(255, 255, 255, 0.07);
+        /* Star Players Card */
+        .star-players-card, .account-desc-card, .escrow-process-card {
+          background: rgba(14, 22, 42, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 18px;
-          padding: 20px 22px;
-        }
-        .desc-heading {
-          font-family: 'Outfit', sans-serif;
-          font-size: 16px;
-          font-weight: 700;
-          color: #FFF;
-          margin: 0 0 10px 0;
-        }
-        .desc-content {
-          font-size: 14px;
-          color: rgba(209, 213, 219, 0.9);
-          line-height: 1.65;
-          white-space: pre-line;
-        }
-
-        .escrow-guarantee-card {
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(37, 99, 235, 0.06) 100%);
-          border: 1px solid rgba(16, 185, 129, 0.25);
-          border-radius: 18px;
-          padding: 20px 22px;
+          padding: 22px 24px;
           display: flex;
           flex-direction: column;
           gap: 14px;
         }
-        .guarantee-head {
+
+        .card-section-head {
           display: flex;
           align-items: center;
           gap: 8px;
         }
-        .guarantee-title {
+
+        .head-title {
           font-family: 'Outfit', sans-serif;
-          font-size: 15px;
+          font-size: 16px;
           font-weight: 700;
           color: #FFF;
         }
-        .guarantee-items-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          font-size: 12.5px;
-          color: rgba(209, 213, 219, 0.85);
-        }
-        .guarantee-point {
+
+        .players-chips-wrap {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 8px;
+          flex-wrap: wrap;
         }
 
-        /* Sidebar Checkout Card */
-        .detail-checkout-sidebar {
-          position: sticky;
-          top: 100px;
+        .player-gold-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.05) 100%);
+          border: 1px solid rgba(245, 158, 11, 0.35);
+          color: #FCD34D;
+          font-size: 13px;
+          font-weight: 700;
         }
-        .checkout-action-card {
-          background: rgba(10, 16, 32, 0.9);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
+
+        .desc-body-text {
+          font-size: 14px;
+          color: rgba(209, 213, 219, 0.9);
+          line-height: 1.6;
+          white-space: pre-line;
+        }
+
+        /* 4-Step Escrow Timeline */
+        .escrow-timeline-steps {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+
+        .step-item {
+          display: flex;
+          gap: 12px;
+          background: rgba(6, 11, 24, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 12px;
+          padding: 14px;
+        }
+
+        .step-num {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #2563EB;
+          color: #FFF;
+          font-size: 12px;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .step-content h4 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #FFF;
+          margin: 0 0 3px 0;
+        }
+
+        .step-content p {
+          font-size: 12px;
+          color: rgba(156, 163, 175, 0.85);
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        /* Right Sticky Buy Box */
+        .detail-right-pane {
+          position: sticky;
+          top: 104px;
+          align-self: start;
+        }
+
+        .sticky-buy-box {
+          background: rgba(14, 22, 42, 0.9);
+          backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 28px;
-          box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.7);
+          border-radius: 20px;
+          padding: 24px;
           display: flex;
           flex-direction: column;
           gap: 20px;
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .price-summary-row {
+        .buy-price-block {
           display: flex;
           flex-direction: column;
           gap: 4px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .price-meta-label {
+
+        .price-lbl {
           font-size: 11.5px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: rgba(156, 163, 175, 0.7);
+          color: rgba(156, 163, 175, 0.8);
+          font-weight: 500;
         }
-        .price-hero-stack {
+
+        .price-row-main {
           display: flex;
           align-items: baseline;
-          gap: 8px;
+          gap: 6px;
         }
-        .price-big-usd {
+
+        .price-usd {
           font-family: 'Outfit', sans-serif;
           font-size: 36px;
           font-weight: 900;
           color: #34D399;
           line-height: 1;
         }
-        .price-sub-uzs {
-          font-size: 13px;
-          color: rgba(156, 163, 175, 0.8);
+
+        .price-cur {
+          font-size: 15px;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.7);
         }
 
-        .checkout-checklist {
+        .price-uzs {
+          font-size: 13px;
+          color: rgba(156, 163, 175, 0.85);
+          font-weight: 500;
+        }
+
+        .buy-trust-checklist {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          padding: 14px 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .check-row {
+
+        .trust-item {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          font-size: 13px;
+          gap: 8px;
+          font-size: 12.5px;
+          color: rgba(209, 213, 219, 0.9);
         }
-        .check-row .label { color: rgba(156, 163, 175, 0.8); }
-        .check-row .val { font-weight: 600; color: #FFF; }
 
-        .btn-instant-buy {
+        .btn-g2g-buy-cta {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
           padding: 14px 20px;
-          border-radius: 14px;
+          border-radius: 12px;
           background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
           color: #FFF;
+          font-family: 'Outfit', sans-serif;
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 800;
           text-decoration: none;
-          box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45);
-          transition: transform 0.2s;
+          box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+          transition: all 0.2s ease;
         }
-        .btn-instant-buy:hover {
-          transform: translateY(-1.5px);
+        .btn-g2g-buy-cta:hover {
+          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px rgba(37, 99, 235, 0.6);
         }
 
-        .seller-summary-block {
+        .buy-seller-section {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          padding-top: 8px;
+          gap: 10px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .seller-block-label {
+
+        .seller-label-muted {
           font-size: 11px;
-          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: rgba(156, 163, 175, 0.6);
+          font-weight: 600;
+          color: rgba(156, 163, 175, 0.7);
         }
-        .seller-profile-row {
+
+        .seller-card-row {
           display: flex;
           align-items: center;
           gap: 12px;
         }
-        .seller-bubble-av {
-          width: 40px;
-          height: 40px;
+
+        .seller-avatar-initial {
+          width: 42px;
+          height: 42px;
           border-radius: 50%;
-          background: #10B981;
+          background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
           color: #FFF;
+          font-family: 'Outfit', sans-serif;
+          font-size: 16px;
           font-weight: 800;
-          font-size: 15px;
           display: flex;
           align-items: center;
           justify-content: center;
-          flex-shrink: 0;
+          border: 2px solid rgba(255, 255, 255, 0.2);
         }
-        .seller-info-stack {
+
+        .seller-name-row {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          gap: 6px;
         }
-        .seller-verified-name {
+
+        .seller-name {
+          font-family: 'Outfit', sans-serif;
           font-size: 14px;
           font-weight: 700;
           color: #FFF;
-          display: flex;
-          align-items: center;
-          gap: 5px;
         }
-        .seller-sub-stats {
+
+        .seller-rating-pill {
           font-size: 11.5px;
-          color: rgba(156, 163, 175, 0.7);
+          color: rgba(156, 163, 175, 0.85);
         }
-        .seller-tg-btn {
+
+        .btn-seller-tg-chat {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 6px;
           padding: 8px 12px;
           border-radius: 8px;
-          background: rgba(37, 99, 235, 0.1);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           color: #60A5FA;
           font-size: 12px;
           font-weight: 600;
           text-decoration: none;
+          transition: all 0.15s ease;
+        }
+        .btn-seller-tg-chat:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #FFF;
         }
 
-        /* Responsive Breakpoint */
-        @media (max-width: 900px) {
-          .detail-main-grid {
+        .buyer-protection-note {
+          display: flex;
+          gap: 10px;
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: 12px;
+          padding: 12px;
+        }
+
+        .buyer-protection-note p {
+          font-size: 11.5px;
+          color: rgba(209, 213, 219, 0.85);
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .text-emerald { color: #34D399; }
+        .text-amber { color: #FBBF24; }
+        .text-blue { color: #60A5FA; }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+          .detail-layout-grid {
             grid-template-columns: 1fr;
           }
-          .detail-hero-image-box {
-            height: 240px;
-          }
-          .guarantee-items-grid {
-            grid-template-columns: 1fr;
-          }
-          .detail-checkout-sidebar {
+          .detail-right-pane {
             position: static;
+          }
+          .specs-stats-6grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .specs-stats-6grid {
+            grid-template-columns: 1fr;
+          }
+          .escrow-timeline-steps {
+            grid-template-columns: 1fr;
+          }
+          .account-main-title {
+            font-size: 20px;
           }
         }
       `}</style>
