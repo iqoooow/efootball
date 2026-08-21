@@ -33,8 +33,8 @@ async function _fetchListings(filters: GetListingsFilter = {}): Promise<{ listin
 
     let query = supabase
       .from('listings')
-      .select(`*, seller:profiles(id, full_name, seller_status)`, { count: 'exact' })
-      .eq('status', 'active')
+      .select('*', { count: 'exact' })
+      .in('status', ['active', 'sold'])
 
     if (filters.type) query = query.eq('type', filters.type)
     if (filters.platform) query = query.eq('platform', filters.platform)
@@ -55,9 +55,28 @@ async function _fetchListings(filters: GetListingsFilter = {}): Promise<{ listin
     const from = (page - 1) * perPage
     query = query.range(from, from + perPage - 1)
 
-    const { data, count, error } = await query
-    if (!error && data) {
-      return { listings: data as Listing[], total: count || data.length, page, perPage }
+    const { data: listingsData, count, error } = await query
+    if (!error && listingsData) {
+      // Fetch seller profiles for these listings
+      const sellerIds = Array.from(new Set(listingsData.map((l: any) => l.seller_id).filter(Boolean)))
+      let profileMap = new Map()
+
+      if (sellerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, seller_status')
+          .in('id', sellerIds)
+        if (profiles) {
+          profileMap = new Map(profiles.map((p: any) => [p.id, p]))
+        }
+      }
+
+      const populated = listingsData.map((l: any) => ({
+        ...l,
+        seller: profileMap.get(l.seller_id) || null,
+      }))
+
+      return { listings: populated as Listing[], total: count || listingsData.length, page, perPage }
     }
   } catch (err) {
     console.error('Error fetching listings from Supabase:', err)
@@ -74,24 +93,37 @@ async function _fetchListings(filters: GetListingsFilter = {}): Promise<{ listin
 export const fetchListings = unstable_cache(
   _fetchListings,
   ['listings'],
-  { revalidate: 30, tags: ['listings'] }
+  { revalidate: 15, tags: ['listings'] }
 )
 
 async function _fetchListingById(id: string): Promise<Listing | null> {
   try {
     const supabase = getPublicSupabase()
-    const { data, error } = await supabase
+    
+    // Fetch listing
+    const { data: listingData, error } = await supabase
       .from('listings')
-      .select(`
-        *,
-        seller:profiles(id, full_name, seller_status, created_at),
-        reviews(rating, comment, created_at, reviewer:profiles(full_name))
-      `)
+      .select('*')
       .eq('id', id)
-      .eq('status', 'active')
       .single()
 
-    if (!error && data) return data as Listing
+    if (!error && listingData) {
+      // Fetch seller profile
+      let seller = null
+      if (listingData.seller_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, full_name, seller_status, telegram_username, created_at')
+          .eq('id', listingData.seller_id)
+          .single()
+        seller = profile
+      }
+
+      return {
+        ...listingData,
+        seller,
+      } as Listing
+    }
   } catch (err) {
     console.error('Error fetching listing by ID:', err)
   }
@@ -101,37 +133,25 @@ async function _fetchListingById(id: string): Promise<Listing | null> {
 
 export const fetchListingById = unstable_cache(
   _fetchListingById,
-  ['listing-by-id'],
-  { revalidate: 30, tags: ['listings'] }
+  ['listing-detail'],
+  { revalidate: 10, tags: ['listings'] }
 )
 
-async function _fetchStats() {
+export async function fetchStats() {
   try {
     const supabase = getPublicSupabase()
-    const [listingsRes, ordersRes, sellersRes] = await Promise.all([
+    const [listingsRes, sellersRes, ordersRes] = await Promise.all([
       supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('seller_status', 'approved'),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'seller'),
+      supabase.from('orders').select('id', { count: 'exact', head: true }),
     ])
 
     return {
       listings: listingsRes.count || 0,
-      orders: ordersRes.count || 0,
       sellers: sellersRes.count || 0,
+      orders: ordersRes.count || 0,
     }
-  } catch (err) {
-    console.error('Error fetching stats from Supabase:', err)
-  }
-
-  return {
-    listings: 0,
-    orders: 0,
-    sellers: 0,
+  } catch {
+    return { listings: 0, sellers: 0, orders: 0 }
   }
 }
-
-export const fetchStats = unstable_cache(
-  _fetchStats,
-  ['stats'],
-  { revalidate: 120, tags: ['stats'] }
-)

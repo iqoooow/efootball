@@ -1,308 +1,386 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, Star, Send, Mail, MapPin, CheckCircle2, ArrowRight } from "lucide-react";
+import { Shield, Star, Send, Mail, MapPin, CheckCircle2, ArrowRight, Trophy } from "lucide-react";
 import { Logo } from "./Logo";
 
 export function Footer() {
   return (
-    <footer
-      style={{
-        position: "relative",
-        background: "transparent",
-        marginTop: 48,
-        overflow: "hidden",
-      }}
-    >
-      {/* Top Floating CTA Box (Steady Container, Button-Only Hover Effects) */}
-      <div className="container" style={{ position: "relative", zIndex: 10, marginBottom: 48 }}>
-        <div
-          style={{
-            padding: "44px 44px",
-            background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            borderRadius: "var(--radius-xl)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 28,
-          }}
-        >
+    <footer className="footer-root">
+      {/* Top Floating CTA Box */}
+      <div className="container footer-cta-container">
+        <div className="footer-cta-card">
           {/* Left Info */}
-          <div>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "5px 12px",
-                borderRadius: 999,
-                background: "rgba(16, 185, 129, 0.12)",
-                border: "1px solid rgba(16, 185, 129, 0.25)",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#34D399",
-                marginBottom: 12,
-              }}
-            >
-              <Shield size={13} /> 100% Insured & Guaranteed Escrow
+          <div className="cta-left-text">
+            <div className="cta-guarantee-badge">
+              <Shield size={13} />
+              <span>100% Escrow Kafolatlangan Tizim</span>
             </div>
-            <h2
-              style={{
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: "clamp(22px, 3.2vw, 34px)",
-                fontWeight: 900,
-                color: "#FFF",
-                marginBottom: 8,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Ready To Sell Your eFootball Accounts Or Coin?
+            <h2 className="cta-main-title">
+              eFootball Akkauntingizni Sotmoqchimisiz?
             </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: 520 }}>
-              Get approved as a verified seller in 2 minutes and start earning directly.
+            <p className="cta-sub-description">
+              2 daqiqada tasdiqlangan sotuvchiga aylaning va hisobingizni kafolatlangan xavfsizlik bilan soting.
             </p>
           </div>
 
-          {/* Right Buttons with High-End Hover Effects */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {/* Right Buttons */}
+          <div className="cta-buttons-stack">
             <Link
               href="/seller/apply"
               className="cta-white-btn"
-              style={{
-                background: "#FFFFFF",
-                color: "#0F172A",
-                fontWeight: 800,
-                fontSize: 14,
-                padding: "13px 26px",
-                borderRadius: 12,
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                boxShadow: "0 10px 25px rgba(255, 255, 255, 0.15)",
-                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
             >
-              Partner Bo&apos;lish <ArrowRight size={16} className="cta-arrow-icon" style={{ transition: "transform 0.2s ease" }} />
+              <span>Partner Bo&apos;lish</span>
+              <ArrowRight size={16} className="cta-arrow-icon" />
             </Link>
             <a
               href="https://t.me"
               target="_blank"
               rel="noopener noreferrer"
               className="cta-telegram-btn"
-              style={{
-                padding: "13px 20px",
-                borderRadius: 12,
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                background: "rgba(255, 255, 255, 0.04)",
-                color: "#FFF",
-                fontSize: 14,
-                fontWeight: 600,
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                transition: "all 0.25s ease",
-              }}
             >
-              <Send size={15} color="var(--accent-primary)" /> @EFZoneSupport
+              <Send size={15} color="var(--accent-primary)" />
+              <span>@EFZoneSupport</span>
             </a>
           </div>
         </div>
       </div>
 
       {/* Main Footer Links Zone */}
-      <div style={{ background: "transparent", paddingTop: 16, paddingBottom: 36, borderTop: "1px solid rgba(255, 255, 255, 0.04)" }}>
+      <div className="footer-links-zone">
         <div className="container">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.8fr 1.1fr 1.1fr 1.4fr",
-              gap: 40,
-              marginBottom: 48,
-            }}
-          >
+          <div className="footer-columns-grid">
             {/* Column 1: Brand & Badge with Typography Logo */}
-            <div>
-              <div style={{ marginBottom: 14 }}>
+            <div className="footer-brand-col">
+              <div className="footer-logo-wrap">
                 <Logo size="md" />
               </div>
 
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-emerald)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 16 }}>
-                LICENSED & SECURED ESCROW MARKETPLACE
+              <div className="footer-license-label">
+                RASMIY & XAVFSIZ ESCROW MARKETPLACE
               </div>
 
               {/* Verified Reviews Badge Button */}
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 16px",
-                  borderRadius: 10,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid rgba(255, 255, 255, 0.06)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#FFF",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-                  e.currentTarget.style.borderColor = "rgba(251, 191, 36, 0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.06)";
-                }}
-              >
+              <div className="footer-verified-badge">
                 <Star size={14} fill="#FBBF24" color="#FBBF24" />
-                <span>Verified Customer Reviews</span>
+                <span>5.0 ⭐ Ishonchli Kiberfutbol Markazi</span>
               </div>
             </div>
 
             {/* Column 2: Marketplace Navigation */}
-            <div>
-              <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 14, fontWeight: 700, marginBottom: 18, color: "#FFF" }}>Marketplace</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="footer-nav-col">
+              <h4 className="footer-col-title">Marketplace</h4>
+              <div className="footer-links-list">
                 {[
-                  { href: "/listings?type=account", label: "eFootball Hisoblar" },
-                  { href: "/listings?type=coins", label: "Coin Paketlari" },
-                  { href: "/listings?platform=mobile", label: "Mobile Akauntlar" },
-                  { href: "/listings?platform=ps", label: "PlayStation / PC" },
+                  { href: "/listings", label: "Barcha Akkauntlar" },
+                  { href: "/listings?platform=mobile", label: "📱 Mobile (iOS/Android)" },
+                  { href: "/listings?platform=ps", label: "🎮 PlayStation & PC" },
+                  { href: "/#turnirlar", label: "🏆 Turnirlar (Tez kunda)" },
                   { href: "/#faq", label: "Savol va Javoblar" },
                 ].map((link) => (
-                  <Link key={link.href} href={link.href} style={{
-                    fontSize: 13, color: "var(--text-secondary)", textDecoration: "none",
-                    transition: "color 0.2s ease, transform 0.2s ease",
-                    display: "inline-block",
-                  }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#FFF";
-                      e.currentTarget.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "var(--text-secondary)";
-                      e.currentTarget.style.transform = "translateX(0)";
-                    }}
-                  >{link.label}</Link>
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="footer-nav-link"
+                  >
+                    {link.label}
+                  </Link>
                 ))}
               </div>
             </div>
 
             {/* Column 3: Seller & Terms */}
-            <div>
-              <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 14, fontWeight: 700, marginBottom: 18, color: "#FFF" }}>Sotuvchilar</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="footer-nav-col">
+              <h4 className="footer-col-title">Sotuvchilar</h4>
+              <div className="footer-links-list">
                 {[
                   { href: "/seller/apply", label: "Partnerlik Arizasi" },
                   { href: "/seller/dashboard", label: "Sotuvchi Paneli" },
-                  { href: "/seller/apply#terms", label: "Sotuvchi Qoidalari" },
+                  { href: "/admin", label: "Admin Dashboard" },
                   { href: "/terms", label: "Foydalanish Shartlari" },
                   { href: "/privacy", label: "Maxfiylik Siyosati" },
                 ].map((link) => (
-                  <Link key={link.href} href={link.href} style={{
-                    fontSize: 13, color: "var(--text-secondary)", textDecoration: "none",
-                    transition: "color 0.2s ease, transform 0.2s ease",
-                    display: "inline-block",
-                  }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#FFF";
-                      e.currentTarget.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "var(--text-secondary)";
-                      e.currentTarget.style.transform = "translateX(0)";
-                    }}
-                  >{link.label}</Link>
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="footer-nav-link"
+                  >
+                    {link.label}
+                  </Link>
                 ))}
               </div>
             </div>
 
             {/* Column 4: Contact & Direct Channels */}
-            <div>
-              <h4 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 14, fontWeight: 700, marginBottom: 18, color: "#FFF" }}>Bog&apos;lanish</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 13, color: "var(--text-secondary)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="footer-nav-col">
+              <h4 className="footer-col-title">Bog&apos;lanish</h4>
+              <div className="footer-links-list">
+                <div className="contact-item">
                   <Send size={15} color="var(--accent-primary)" />
-                  <a href="https://t.me" target="_blank" rel="noopener noreferrer" style={{ color: "#FFF", textDecoration: "none" }}>
-                    @EFZoneSupport
+                  <a
+                    href="https://t.me"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contact-link"
+                  >
+                    @EFZoneSupport (Telegram)
                   </a>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="contact-item">
                   <Mail size={15} color="var(--accent-primary)" />
                   <span>support@efzone.uz</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="contact-item">
                   <MapPin size={15} color="var(--accent-primary)" />
                   <span>Toshkent, O&apos;zbekiston</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--accent-emerald)", marginTop: 4 }}>
-                  <CheckCircle2 size={15} color="var(--accent-emerald)" />
-                  <span>DOT Escrow ID: 4537032-1799863</span>
-                </div>
-                <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 12 }}>
-                  <Link href="/privacy" style={{ color: "var(--text-secondary)", textDecoration: "underline" }}>Privacy Policy</Link>
-                  <Link href="/terms" style={{ color: "var(--text-secondary)", textDecoration: "underline" }}>Terms of Service</Link>
+                <div className="contact-item escrow-item">
+                  <CheckCircle2 size={15} color="#34D399" />
+                  <span>100% Escrow Himoyasi</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Bottom Copyright Bar */}
-          <div style={{
-            borderTop: "1px solid rgba(255, 255, 255, 0.03)",
-            paddingTop: 24,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 16,
-            fontSize: 12,
-            color: "var(--text-muted)",
-          }}>
+          <div className="footer-bottom-bar">
             <div>
-              All rights reserved. eFootball Zone Marketplace Inc.
+              © 2026 eFootball Zone Marketplace. Barcha huquqlar himoyalangan.
             </div>
             <div>
-              eFootball Zone Inc — Licensed & Secured Escrow Provider
+              eFootball Zone — Licensed & Secured Escrow Provider
             </div>
           </div>
         </div>
       </div>
 
       <style>{`
+        .footer-root {
+          position: relative;
+          background: transparent;
+          margin-top: 48px;
+          overflow: hidden;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .footer-cta-container {
+          position: relative;
+          z-index: 10;
+          margin-bottom: 48px;
+        }
+
+        .footer-cta-card {
+          padding: 40px 44px;
+          background: rgba(10, 16, 32, 0.85);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border-radius: 28px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 28px;
+        }
+
+        .cta-left-text {
+          max-width: 580px;
+        }
+
+        .cta-guarantee-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 12px;
+          border-radius: 999px;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          font-size: 12px;
+          font-weight: 600;
+          color: #34D399;
+          margin-bottom: 12px;
+        }
+
+        .cta-main-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: clamp(22px, 3vw, 32px);
+          font-weight: 800;
+          color: #FFF;
+          margin: 0 0 8px 0;
+          letter-spacing: -0.02em;
+        }
+
+        .cta-sub-description {
+          color: rgba(209, 213, 219, 0.85);
+          font-size: 14px;
+          line-height: 1.55;
+          margin: 0;
+        }
+
+        .cta-buttons-stack {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .cta-white-btn {
+          background: #FFFFFF;
+          color: #0F172A;
+          font-weight: 800;
+          font-size: 14px;
+          padding: 13px 26px;
+          border-radius: 12px;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 10px 25px rgba(255, 255, 255, 0.15);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
         .cta-white-btn:hover {
-          transform: translateY(-2px) scale(1.03);
-          box-shadow: 0 0 30px rgba(255, 255, 255, 0.4) !important;
-        }
-
-        .cta-white-btn:hover .cta-arrow-icon {
-          transform: translateX(4px);
-        }
-
-        .cta-telegram-btn:hover {
-          background: rgba(37, 99, 235, 0.15) !important;
-          border-color: rgba(59, 130, 246, 0.4) !important;
           transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
+          box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+        .cta-white-btn:hover .cta-arrow-icon {
+          transform: translateX(3px);
         }
 
-        @media (max-width: 768px) {
-          footer > div:nth-child(2) > div > div:nth-child(1) {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 32px !important;
-          }
+        .cta-telegram-btn {
+          padding: 13px 20px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.04);
+          color: #FFF;
+          font-size: 14px;
+          font-weight: 600;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.2s ease;
         }
-        @media (max-width: 480px) {
-          footer > div:nth-child(2) > div > div:nth-child(1) {
-            grid-template-columns: 1fr !important;
+        .cta-telegram-btn:hover {
+          background: rgba(37, 99, 235, 0.15);
+          border-color: rgba(59, 130, 246, 0.4);
+          transform: translateY(-2px);
+        }
+
+        .footer-links-zone {
+          padding-top: 24px;
+          padding-bottom: 36px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-columns-grid {
+          display: grid;
+          grid-template-columns: 1.6fr 1fr 1fr 1.3fr;
+          gap: 36px;
+          margin-bottom: 40px;
+        }
+
+        .footer-brand-col {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .footer-license-label {
+          font-size: 11px;
+          font-weight: 700;
+          color: #34D399;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .footer-verified-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          font-size: 12px;
+          font-weight: 600;
+          color: #FFF;
+        }
+
+        .footer-nav-col {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .footer-col-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          color: #FFF;
+          margin: 0;
+        }
+        .footer-links-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .footer-nav-link {
+          font-size: 13px;
+          color: rgba(156, 163, 175, 0.85);
+          text-decoration: none;
+          transition: color 0.15s, transform 0.15s;
+          display: inline-block;
+        }
+        .footer-nav-link:hover {
+          color: #FFF;
+          transform: translateX(3px);
+        }
+
+        .contact-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: rgba(156, 163, 175, 0.85);
+        }
+        .contact-link {
+          color: #FFF;
+          text-decoration: none;
+        }
+        .escrow-item {
+          color: #34D399;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .footer-bottom-bar {
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
+          padding-top: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 12px;
+          font-size: 12px;
+          color: rgba(156, 163, 175, 0.6);
+        }
+
+        @media (max-width: 860px) {
+          .footer-cta-card {
+            padding: 28px 20px;
+          }
+          .cta-buttons-stack {
+            width: 100%;
+          }
+          .cta-white-btn, .cta-telegram-btn {
+            width: 100%;
+            justify-content: center;
+          }
+          .footer-columns-grid {
+            grid-template-columns: 1fr;
+            gap: 28px;
+          }
+          .footer-bottom-bar {
+            flex-direction: column;
+            text-align: center;
           }
         }
       `}</style>

@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Monitor, Gamepad2, Smartphone, Star, Clock, CheckCircle2, Zap, Coins } from "lucide-react";
+import {
+  Monitor,
+  Gamepad2,
+  Smartphone,
+  Star,
+  ShieldCheck,
+  Zap,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
 import type { Listing } from "@/lib/types";
-import { getPlatformLabel, formatCoinAmount } from "@/lib/utils";
+import { getPlatformLabel } from "@/lib/utils";
 
 interface ListingCardProps {
   listing: Listing & {
@@ -11,271 +20,351 @@ interface ListingCardProps {
       full_name: string | null;
       seller_status: string | null;
     };
-    _reviewStats?: {
-      avg: number;
-      count: number;
-    };
   };
 }
 
 const PlatformIcon = ({ platform }: { platform: string }) => {
   const props = { size: 13 };
   switch (platform) {
-    case "ps": return <Gamepad2 {...props} />;
-    case "xbox": return <Gamepad2 {...props} />;
-    case "pc": return <Monitor {...props} />;
-    case "mobile": return <Smartphone {...props} />;
-    default: return <Gamepad2 {...props} />;
+    case "ps":
+      return <Gamepad2 {...props} />;
+    case "xbox":
+      return <Gamepad2 {...props} />;
+    case "pc":
+      return <Monitor {...props} />;
+    case "mobile":
+      return <Smartphone {...props} />;
+    default:
+      return <Gamepad2 {...props} />;
   }
 };
 
 export function ListingCard({ listing }: ListingCardProps) {
-  const isAccount = listing.type === "account";
-  const avgRating = listing._reviewStats?.avg ?? 5.0;
-  const reviewCount = listing._reviewStats?.count ?? 12;
+  const UZS_EXCHANGE_RATE = 13000;
+  const priceUzs = Math.round(listing.price * UZS_EXCHANGE_RATE).toLocaleString("uz-UZ");
 
-  // Calculate approximate UZS price for user convenience
-  const uzsNum = Math.round(listing.price * 12800);
-  const estimatedPriceUZS = uzsNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const hasImage =
+    listing.images &&
+    listing.images.length > 0 &&
+    typeof listing.images[0] === "string" &&
+    listing.images[0].trim() !== "";
 
   return (
     <Link
       href={`/listings/${listing.id}`}
-      style={{ textDecoration: "none", color: "inherit", display: "block" }}
+      className="listing-card-link-wrapper"
     >
-      <div
-        style={{
-          background: "rgba(15, 23, 42, 0.65)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderRadius: "var(--radius-xl)",
-          overflow: "hidden",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          cursor: "pointer",
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "rgba(59, 130, 246, 0.35)";
-          el.style.transform = "translateY(-5px)";
-          el.style.boxShadow = "0 20px 45px -10px rgba(0, 0, 0, 0.6), 0 0 25px rgba(37, 99, 235, 0.15)";
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "rgba(255, 255, 255, 0.08)";
-          el.style.transform = "translateY(0)";
-          el.style.boxShadow = "none";
-        }}
-      >
-        {/* Thumbnail Graphic with Scrim Gradient */}
-        <div
-          style={{
-            height: 160,
-            overflow: "hidden",
-            position: "relative",
-            background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
-          }}
-        >
-          {listing.images?.[0] ? (
+      <div className="listing-card-root">
+        {/* Thumbnail Showcase */}
+        <div className="card-thumb-container">
+          {hasImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={listing.images[0]}
+              src={listing.images![0]}
               alt={listing.title}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                filter: "brightness(0.85) contrast(1.1)",
-              }}
+              className="card-thumb-img"
+              loading="lazy"
             />
           ) : (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  background: isAccount ? "rgba(37, 99, 235, 0.2)" : "rgba(245, 158, 11, 0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {isAccount ? <Gamepad2 size={22} color="var(--accent-primary)" /> : <Coins size={22} color="var(--accent-amber)" />}
+            <div className="card-thumb-fallback">
+              <div className="fallback-grid-pattern" />
+              <div className="fallback-content">
+                <span className="fallback-badge">
+                  <PlatformIcon platform={listing.platform} />
+                  <span>{getPlatformLabel(listing.platform)}</span>
+                </span>
+                <span className="fallback-ovr">
+                  {listing.team_rating ? `${listing.team_rating} OVR` : "eFootball Hisob"}
+                </span>
               </div>
             </div>
           )}
 
-          {/* Bottom Dark Scrim Fade for seamless transition */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.2) 60%, transparent 100%)",
-            }}
-          />
-
-          {/* Frosted Type Badge */}
-          <div style={{ position: "absolute", top: 12, left: 12, zIndex: 2 }}>
-            <span
-              style={{
-                padding: "4px 10px",
-                borderRadius: 8,
-                fontSize: 11,
-                fontWeight: 700,
-                background: isAccount ? "rgba(37, 99, 235, 0.35)" : "rgba(16, 185, 129, 0.35)",
-                backdropFilter: "blur(12px)",
-                color: "#FFF",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {isAccount ? "HISOB" : "COIN"}
-            </span>
-          </div>
-
-          {/* Frosted Platform Badge */}
-          <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "4px 9px",
-                borderRadius: 8,
-                fontSize: 11,
-                fontWeight: 600,
-                background: "rgba(15, 23, 42, 0.75)",
-                backdropFilter: "blur(12px)",
-                color: "#FFF",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-              }}
-            >
+          {/* Badges Over Image */}
+          <div className="card-floating-badges">
+            <span className="card-platform-pill">
               <PlatformIcon platform={listing.platform} />
-              {getPlatformLabel(listing.platform)}
+              <span>{getPlatformLabel(listing.platform)}</span>
             </span>
+
+            {listing.team_rating && (
+              <span className="card-ovr-pill">
+                🔥 {listing.team_rating} OVR
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Card Body Content */}
-        <div style={{ padding: "18px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div>
-            {/* Title */}
-            <h3
-              style={{
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: 15,
-                fontWeight: 700,
-                lineHeight: 1.4,
-                marginBottom: 12,
-                color: "#FFF",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                minHeight: 42,
-              }}
-            >
+        {/* Card Details Body */}
+        <div className="card-body-content">
+          <div className="card-title-row">
+            <h3 className="card-main-title" title={listing.title}>
               {listing.title}
             </h3>
-
-            {/* Clean Metrics (No nested boxes) */}
-            <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap", fontSize: 12 }}>
-              {isAccount && listing.team_rating && (
-                <span style={{ color: "#FBBF24", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-                  ⭐ {listing.team_rating} Reyting
-                </span>
-              )}
-              {isAccount && listing.coin_balance && (
-                <span style={{ color: "#34D399", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                  💰 {formatCoinAmount(listing.coin_balance)}
-                </span>
-              )}
-              {!isAccount && listing.coin_amount && (
-                <span style={{ color: "#FBBF24", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-                  🪙 {formatCoinAmount(listing.coin_amount)}
-                </span>
-              )}
-            </div>
-
-            {/* Key Players Minimal Tags */}
-            {isAccount && listing.key_players && listing.key_players.length > 0 && (
-              <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
-                {listing.key_players.slice(0, 3).map((player) => (
-                  <span
-                    key={player}
-                    style={{
-                      padding: "3px 8px",
-                      borderRadius: 6,
-                      fontSize: 11,
-                      fontWeight: 500,
-                      background: "rgba(255, 255, 255, 0.05)",
-                      color: "rgba(255, 255, 255, 0.85)",
-                      border: "1px solid rgba(255, 255, 255, 0.08)",
-                    }}
-                  >
-                    {player}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Card Footer: Executive Price & Seller Info */}
-          <div
-            style={{
-              paddingTop: 14,
-              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-            }}
-          >
-            {/* Price */}
-            <div>
-              <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                Narxi
+          {/* Key Players or Stats Chips */}
+          {listing.key_players && listing.key_players.length > 0 ? (
+            <div className="card-stars-row">
+              <span className="stars-label">⭐ Yulduzlar:</span>
+              <span className="stars-names">
+                {listing.key_players.slice(0, 2).join(" • ")}
+              </span>
+            </div>
+          ) : (
+            <div className="card-seller-row">
+              <span className="seller-name-text">
+                Sotuvchi: <strong>{listing.seller?.full_name || "Tasdiqlangan Sotuvchi"}</strong>
+              </span>
+            </div>
+          )}
+
+          {/* Price & Action Row */}
+          <div className="card-footer-pricing">
+            <div className="pricing-stack">
+              <div className="price-primary">
+                ${listing.price}
               </div>
-              <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, fontWeight: 900, color: "#FFF" }}>
-                ${listing.price.toLocaleString()}
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 1 }}>
-                ≈ {estimatedPriceUZS} so&apos;m
+              <div className="price-secondary">
+                ≈ {priceUzs} so&apos;m
               </div>
             </div>
 
-            {/* Seller & Rating Info */}
-            <div style={{ textAlign: "right" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end", marginBottom: 3 }}>
-                <CheckCircle2 size={13} color="var(--accent-emerald)" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#FFF" }}>
-                  {listing.seller?.full_name?.split(" ")[0] || "Jasur"}
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end", fontSize: 11 }}>
-                <span style={{ color: "#FBBF24", fontWeight: 700, display: "flex", alignItems: "center", gap: 2 }}>
-                  <Star size={11} fill="#FBBF24" color="#FBBF24" /> {avgRating.toFixed(1)}
-                </span>
-                <span style={{ color: "var(--text-muted)" }}>({reviewCount})</span>
-              </div>
+            <div className="card-view-cta">
+              <span>Xarid</span>
+              <ArrowRight size={14} />
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .listing-card-link-wrapper {
+          text-decoration: none;
+          color: inherit;
+          display: block;
+          height: 100%;
+        }
+
+        .listing-card-root {
+          background: rgba(10, 17, 36, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          overflow: hidden;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .listing-card-root:hover {
+          border-color: rgba(59, 130, 246, 0.4);
+          transform: translateY(-4px);
+          box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .card-thumb-container {
+          height: 170px;
+          position: relative;
+          background: #070D1E;
+          overflow: hidden;
+        }
+
+        .card-thumb-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: brightness(0.88) contrast(1.08);
+          transition: transform 0.3s ease;
+        }
+
+        .listing-card-root:hover .card-thumb-img {
+          transform: scale(1.04);
+        }
+
+        .card-thumb-fallback {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #091228 0%, #152244 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          padding: 16px;
+        }
+
+        .fallback-grid-pattern {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+          background-size: 16px 16px;
+          opacity: 0.6;
+        }
+
+        .fallback-content {
+          position: relative;
+          z-index: 2;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .fallback-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(37, 99, 235, 0.25);
+          border: 1px solid rgba(59, 130, 246, 0.4);
+          padding: 3px 8px;
+          border-radius: 999px;
+          font-size: 11px;
+          color: #93C5FD;
+          font-weight: 700;
+        }
+
+        .fallback-ovr {
+          font-family: 'Outfit', sans-serif;
+          font-size: 16px;
+          font-weight: 800;
+          color: #FFF;
+        }
+
+        .card-floating-badges {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          right: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 3;
+        }
+
+        .card-platform-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(8, 14, 30, 0.85);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #FFF;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 6px;
+        }
+
+        .card-ovr-pill {
+          background: rgba(245, 158, 11, 0.9);
+          color: #000;
+          font-size: 11px;
+          font-weight: 800;
+          padding: 3px 8px;
+          border-radius: 6px;
+          box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .card-body-content {
+          padding: 16px 18px;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .card-title-row {
+          min-height: 42px;
+        }
+
+        .card-main-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          color: #FFF;
+          line-height: 1.35;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .card-stars-row {
+          font-size: 12px;
+          color: #93C5FD;
+          background: rgba(37, 99, 235, 0.08);
+          border: 1px solid rgba(37, 99, 235, 0.18);
+          padding: 5px 8px;
+          border-radius: 8px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .stars-label {
+          font-weight: 700;
+          color: #60A5FA;
+          margin-right: 4px;
+        }
+
+        .card-seller-row {
+          font-size: 12px;
+          color: rgba(156, 163, 175, 0.85);
+        }
+
+        .card-footer-pricing {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .pricing-stack {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .price-primary {
+          font-family: 'Outfit', sans-serif;
+          font-size: 20px;
+          font-weight: 800;
+          color: #34D399;
+          line-height: 1.1;
+        }
+
+        .price-secondary {
+          font-size: 11px;
+          color: rgba(156, 163, 175, 0.7);
+          margin-top: 2px;
+        }
+
+        .card-view-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(37, 99, 235, 0.15);
+          border: 1px solid rgba(37, 99, 235, 0.35);
+          color: #60A5FA;
+          font-size: 12.5px;
+          font-weight: 700;
+          padding: 6px 12px;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+        }
+
+        .listing-card-root:hover .card-view-cta {
+          background: #2563EB;
+          color: #FFF;
+          border-color: #2563EB;
+        }
+      `}</style>
     </Link>
   );
 }

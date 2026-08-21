@@ -16,9 +16,12 @@ import {
   MessageCircle,
   HelpCircle,
   Share2,
+  ShieldCheck,
+  ArrowRight,
+  Coins,
 } from "lucide-react";
 import { fetchListingById } from "@/lib/dataService";
-import { getPlatformLabel, formatCoinAmount, formatDate } from "@/lib/utils";
+import { getPlatformLabel, formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
 interface Props {
@@ -31,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!listing) return { title: "E'lon topilmadi | EFZone" };
   return {
     title: `${listing.title} | EFZone Marketplace`,
-    description: listing.description || `${listing.type === "account" ? "eFootball hisob" : "eFootball tanga"} — $${listing.price}`,
+    description: listing.description || `eFootball hisob — $${listing.price}`,
   };
 }
 
@@ -42,11 +45,8 @@ export default async function ListingDetailPage({ params }: Props) {
   if (!listing) notFound();
 
   const isAccount = listing.type === "account";
-  const reviews: any[] = listing.reviews || [];
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length
-      : 5.0;
+  const UZS_EXCHANGE_RATE = 13000;
+  const priceUzs = Math.round(listing.price * UZS_EXCHANGE_RATE).toLocaleString("uz-UZ");
 
   const platformIcons: Record<string, any> = {
     ps: Gamepad2,
@@ -56,319 +56,694 @@ export default async function ListingDetailPage({ params }: Props) {
   };
   const PlatformIcon = platformIcons[listing.platform] || Gamepad2;
 
+  const hasImage =
+    listing.images &&
+    listing.images.length > 0 &&
+    typeof listing.images[0] === "string" &&
+    listing.images[0].trim() !== "";
+
   return (
-    <div style={{ paddingTop: 88, minHeight: "100vh", paddingBottom: 80 }}>
-      <div className="container" style={{ paddingTop: 32 }}>
+    <div className="listing-detail-root">
+      <div className="container detail-container">
         {/* Breadcrumb Navigation */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, fontSize: 14, color: "var(--text-muted)", flexWrap: "wrap" }}>
-          <Link href="/listings" style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--text-muted)", textDecoration: "none" }}>
+        <div className="detail-breadcrumb">
+          <Link href="/listings" className="breadcrumb-back-link">
             <ArrowLeft size={14} /> E&apos;lonlar
           </Link>
-          <span>/</span>
-          <Link href={`/listings?platform=${listing.platform}`} style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+          <span className="sep">/</span>
+          <Link
+            href={`/listings?platform=${listing.platform}`}
+            className="breadcrumb-platform-link"
+          >
             {getPlatformLabel(listing.platform)}
           </Link>
-          <span>/</span>
-          <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{listing.title}</span>
+          <span className="sep">/</span>
+          <span className="breadcrumb-current-title">{listing.title}</span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 32, alignItems: "start" }}>
-          {/* Left Column: Image Gallery, Specs, Details, Reviews */}
-          <div>
+        {/* 2-Column Responsive Layout */}
+        <div className="detail-main-grid">
+          {/* Left Column: Image Gallery, Specs, Details */}
+          <div className="detail-content-left">
             {/* Hero Image Showcase */}
-            <div
-              style={{
-                borderRadius: 20,
-                overflow: "hidden",
-                marginBottom: 28,
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                height: 400,
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {listing.images?.[0] ? (
+            <div className="detail-hero-image-box">
+              {hasImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={listing.images[0]}
+                  src={listing.images![0]}
                   alt={listing.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  className="detail-main-img"
                 />
               ) : (
-                <div style={{ textAlign: "center" }}>
-                  <Zap size={64} color="rgba(0,230,118,0.3)" />
-                  <p style={{ color: "var(--text-muted)", marginTop: 12 }}>Rasm mavjud emas</p>
+                <div className="detail-fallback-banner">
+                  <div className="fallback-bg-art" />
+                  <div className="fallback-meta">
+                    <span className="fallback-pill">
+                      <PlatformIcon size={14} /> {getPlatformLabel(listing.platform)}
+                    </span>
+                    <span className="fallback-ovr-text">
+                      {listing.team_rating ? `${listing.team_rating} OVR Rating` : "eFootball Hisob"}
+                    </span>
+                  </div>
                 </div>
               )}
 
               {/* Floating Badges */}
-              <div style={{ position: "absolute", top: 18, left: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span className={`badge ${isAccount ? "badge-blue" : "badge-green"}`} style={{ padding: "6px 14px", fontSize: 12 }}>
-                  {isAccount ? "HISOB" : "TANGA"}
+              <div className="hero-top-badges">
+                <span className="badge-platform-tag">
+                  <PlatformIcon size={13} /> {getPlatformLabel(listing.platform)}
                 </span>
-                <span className="badge badge-gray" style={{ padding: "6px 14px", fontSize: 12 }}>
-                  <PlatformIcon size={14} /> {getPlatformLabel(listing.platform)}
-                </span>
+                {listing.team_rating && (
+                  <span className="badge-ovr-tag">
+                    🔥 {listing.team_rating} OVR
+                  </span>
+                )}
               </div>
 
-              <div style={{ position: "absolute", bottom: 18, right: 18 }}>
-                <span
-                  style={{
-                    background: "rgba(0,0,0,0.75)",
-                    backdropFilter: "blur(10px)",
-                    color: "var(--accent)",
-                    padding: "6px 14px",
-                    borderRadius: 10,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  <Shield size={14} /> 100% Escrow Kafolatlangan
-                </span>
+              <div className="hero-bottom-guarantee">
+                <ShieldCheck size={14} className="text-emerald" />
+                <span>100% Escrow Himoyalangan</span>
               </div>
             </div>
 
-            {/* Title & Key Highlights */}
-            <div style={{ marginBottom: 32 }}>
-              <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 700, lineHeight: 1.3, marginBottom: 16 }}>
-                {listing.title}
-              </h1>
+            {/* Title & Key Specs Header */}
+            <div className="detail-title-card">
+              <h1 className="detail-main-heading">{listing.title}</h1>
 
-              {/* Stats Bar */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
-                {isAccount && listing.team_rating && (
-                  <div className="card" style={{ padding: "16px 20px" }}>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Jamoa Reytingi</div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--accent)", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {/* Specs Grid */}
+              <div className="detail-specs-grid">
+                {listing.team_rating && (
+                  <div className="spec-stat-card">
+                    <span className="stat-label">Jamoa Reytingi</span>
+                    <span className="stat-value text-blue">
                       ⭐ {listing.team_rating}
-                    </div>
+                    </span>
                   </div>
                 )}
-                {isAccount && listing.coin_balance && (
-                  <div className="card" style={{ padding: "16px 20px" }}>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Coin Balansi</div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", fontFamily: "'Space Grotesk', sans-serif" }}>
-                      💰 {formatCoinAmount(listing.coin_balance)}
-                    </div>
+                {listing.coin_balance && (
+                  <div className="spec-stat-card">
+                    <span className="stat-label">Coin Balansi</span>
+                    <span className="stat-value text-amber">
+                      🪙 {listing.coin_balance.toLocaleString()}
+                    </span>
                   </div>
                 )}
-                {!isAccount && listing.coin_amount && (
-                  <div className="card" style={{ padding: "16px 20px" }}>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Tanga Miqdori</div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--accent)", fontFamily: "'Space Grotesk', sans-serif" }}>
-                      🪙 {formatCoinAmount(listing.coin_amount)}
-                    </div>
+                {listing.gp_balance && (
+                  <div className="spec-stat-card">
+                    <span className="stat-label">GP Balans</span>
+                    <span className="stat-value">
+                      ⚽ {(listing.gp_balance / 1000000).toFixed(1)}M GP
+                    </span>
                   </div>
                 )}
-                <div className="card" style={{ padding: "16px 20px" }}>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Yetkazib Berish</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                    <Clock size={16} color="var(--accent)" /> {listing.delivery_time || "30 daqiqa"}
-                  </div>
+                <div className="spec-stat-card">
+                  <span className="stat-label">Yetkazib Berish</span>
+                  <span className="stat-value text-emerald">
+                    <Clock size={15} /> {listing.delivery_time || "15-30 daqiqa"}
+                  </span>
                 </div>
               </div>
 
-              {/* Key Players Card List (if account) */}
-              {isAccount && listing.key_players && listing.key_players.length > 0 && (
-                <div className="card" style={{ padding: "24px", marginBottom: 28 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                    <Award size={18} color="var(--accent)" />
-                    <h2 style={{ fontSize: 18, fontWeight: 700 }}>Asosiy Afsonaviy O&apos;yinchilar</h2>
+              {/* Key Featured Players */}
+              {listing.key_players && listing.key_players.length > 0 && (
+                <div className="featured-players-box">
+                  <div className="box-title-row">
+                    <Award size={17} className="text-amber" />
+                    <span>Tarkibdagi Sara Yulduzlar</span>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                  <div className="players-chip-grid">
                     {listing.key_players.map((player) => (
-                      <div
-                        key={player}
-                        style={{
-                          padding: "12px 16px",
-                          borderRadius: 12,
-                          background: "var(--bg-elevated)",
-                          border: "1px solid rgba(79,142,247,0.2)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
-                        <Sparkles size={16} color="#4f8ef7" />
-                        <span style={{ fontWeight: 600, fontSize: 14 }}>{player}</span>
+                      <div key={player} className="player-badge-chip">
+                        <Sparkles size={14} className="text-blue" />
+                        <span>{player}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Description */}
-              <div className="card" style={{ padding: "28px", marginBottom: 28 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 14 }}>E&apos;lon Tavsifi</h2>
-                <div style={{ color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.8, whiteSpace: "pre-line" }}>
-                  {listing.description || "Qo'shimcha tavsif kiritilmagan."}
+              {/* Description Box */}
+              <div className="detail-desc-box">
+                <h3 className="desc-heading">E&apos;lon Haqida Batafsil</h3>
+                <div className="desc-content">
+                  {listing.description || "Ushbu akkount to'liq tekshirilgan va xarid qilishga tayyor."}
                 </div>
               </div>
 
-              {/* Safety Checklist */}
-              <div className="card gradient-border" style={{ padding: "24px", marginBottom: 28 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                  <Shield size={20} color="var(--accent)" />
-                  <h3 style={{ fontSize: 17, fontWeight: 700 }}>Xaridor Xavfsizlik Kafolati</h3>
+              {/* Guarantee Card */}
+              <div className="escrow-guarantee-card">
+                <div className="guarantee-head">
+                  <ShieldCheck size={20} className="text-emerald" />
+                  <span className="guarantee-title">
+                    Xaridor Xavfsizlik Kafolati (Escrow)
+                  </span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 13, color: "var(--text-secondary)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <CheckCircle size={15} color="var(--accent)" /> Konami ID to&apos;liq beriladi
+                <div className="guarantee-items-grid">
+                  <div className="guarantee-point">
+                    <CheckCircle size={15} className="text-emerald" />
+                    <span>Konami ID to&apos;liq topshiriladi</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <CheckCircle size={15} color="var(--accent)" /> Pochta o&apos;zgartirish imkoniyati
+                  <div className="guarantee-point">
+                    <CheckCircle size={15} className="text-emerald" />
+                    <span>Pochta o&apos;zgartirish imkoniyati</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <CheckCircle size={15} color="var(--accent)" /> 24 soat nizo ochish huquqi
+                  <div className="guarantee-point">
+                    <CheckCircle size={15} className="text-emerald" />
+                    <span>24 soat nizo ochish huquqi</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <CheckCircle size={15} color="var(--accent)" /> 100% pul qaytarish kafolati
-                  </div>
-                </div>
-              </div>
-
-              {/* Reviews Section */}
-              <div className="card" style={{ padding: "28px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 700 }}>Mijozlar Fikrlari</h2>
-                    <span className="badge badge-green">{reviews.length > 0 ? reviews.length : "2"} ta sharh</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <Star size={16} color="#ffa502" fill="#ffa502" />
-                    <span style={{ fontWeight: 700, fontSize: 16 }}>{avgRating.toFixed(1)}</span>
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>/ 5.0</span>
+                  <div className="guarantee-point">
+                    <CheckCircle size={15} className="text-emerald" />
+                    <span>100% pul qaytarish kafolati</span>
                   </div>
                 </div>
-
-                {reviews.length === 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    <div style={{ padding: "16px", borderRadius: 12, background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#4f8ef7", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>
-                            S
-                          </div>
-                          <span style={{ fontWeight: 600, fontSize: 14 }}>Shohruh M.</span>
-                          <span className="badge badge-green" style={{ fontSize: 10 }}>Tasdiqlangan Xarid</span>
-                        </div>
-                        <div style={{ display: "flex", gap: 2 }}>
-                          {[1, 2, 3, 4, 5].map((i) => (
-                            <Star key={i} size={13} color="#ffa502" fill="#ffa502" />
-                          ))}
-                        </div>
-                      </div>
-                      <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                        Akkount daxshat! Messi 106 OVR va Ronaldolar joyida, 10 daqiqada topshirdi. Ishonchli sotuvchi!
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    {reviews.map((rev: any) => (
-                      <div key={rev.id} style={{ padding: "16px", borderRadius: 12, background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontWeight: 600, fontSize: 14 }}>{rev.reviewer?.full_name || "Mijoz"}</span>
-                            <span className="badge badge-green" style={{ fontSize: 10 }}>Tasdiqlangan Xarid</span>
-                          </div>
-                          <div style={{ display: "flex", gap: 2 }}>
-                            {Array.from({ length: rev.rating }).map((_, i) => (
-                              <Star key={i} size={13} color="#ffa502" fill="#ffa502" />
-                            ))}
-                          </div>
-                        </div>
-                        <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>{rev.comment}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Right Column: Sticky Checkout Sidebar */}
-          <div style={{ position: "sticky", top: 100 }}>
-            <div className="card gradient-border" style={{ padding: "28px" }}>
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>Xarid Narxi</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontSize: 36, fontWeight: 800, color: "var(--accent)", fontFamily: "'Space Grotesk', sans-serif" }}>
-                    ${listing.price}
-                  </span>
-                  <span style={{ fontSize: 14, color: "var(--text-muted)" }}>
-                    ≈ {(listing.price * 12800).toLocaleString("uz-UZ")} so&apos;m
-                  </span>
+          {/* Right Column: Checkout Purchase Box */}
+          <div className="detail-checkout-sidebar">
+            <div className="checkout-action-card">
+              <div className="price-summary-row">
+                <div className="price-meta-label">Xarid Narxi</div>
+                <div className="price-hero-stack">
+                  <span className="price-big-usd">${listing.price}</span>
+                  <span className="price-sub-uzs">≈ {priceUzs} so&apos;m</span>
                 </div>
               </div>
 
-              <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", padding: "16px 0", marginBottom: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 8 }}>
-                  <span style={{ color: "var(--text-muted)" }}>Platforma</span>
-                  <span style={{ fontWeight: 600 }}>{getPlatformLabel(listing.platform)}</span>
+              <div className="checkout-checklist">
+                <div className="check-row">
+                  <span className="label">Platforma</span>
+                  <span className="val">{getPlatformLabel(listing.platform)}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 8 }}>
-                  <span style={{ color: "var(--text-muted)" }}>Yetkazib berish</span>
-                  <span style={{ fontWeight: 600, color: "var(--accent)" }}>{listing.delivery_time || "15-30 daqiqa"}</span>
+                <div className="check-row">
+                  <span className="label">Yetkazib berish</span>
+                  <span className="val text-emerald">
+                    {listing.delivery_time || "15-30 daqiqa"}
+                  </span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                  <span style={{ color: "var(--text-muted)" }}>Kafolat muddati</span>
-                  <span style={{ fontWeight: 600 }}>24 soat to&apos;liq himoya</span>
+                <div className="check-row">
+                  <span className="label">Kafolat muddati</span>
+                  <span className="val">24 soat to&apos;liq himoya</span>
                 </div>
               </div>
 
-              {/* Main Checkout CTA */}
+              {/* Buy Button */}
               <Link
                 href={`/checkout/${listing.id}`}
-                className="btn btn-primary btn-lg"
-                style={{ width: "100%", padding: "16px", fontSize: 16, borderRadius: 12, marginBottom: 12 }}
+                className="btn-instant-buy"
               >
-                <Lock size={16} /> Hoziroq Xarid Qilish
+                <Lock size={17} />
+                <span>Hoziroq Xarid Qilish</span>
+                <ArrowRight size={16} />
               </Link>
 
-              {/* Seller Card */}
-              <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>Sotuvchi Haqida</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #00e676, #4f8ef7)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 800,
-                      color: "#000",
-                      fontSize: 16,
-                    }}
-                  >
-                    {listing.seller?.full_name?.[0] || "S"}
+              {/* Seller Information */}
+              <div className="seller-summary-block">
+                <div className="seller-block-label">Sotuvchi Ma&apos;lumotlari</div>
+                <div className="seller-profile-row">
+                  <div className="seller-bubble-av">
+                    {(listing.seller?.full_name || "S").charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 700, fontSize: 15 }}>
-                        {listing.seller?.full_name || "Jasur Bek (eF Master)"}
-                      </span>
-                      <CheckCircle size={14} color="var(--accent)" />
+                  <div className="seller-info-stack">
+                    <div className="seller-verified-name">
+                      <span>{listing.seller?.full_name || "Tasdiqlangan Sotuvchi"}</span>
+                      <ShieldCheck size={14} className="text-emerald" />
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                      120+ muvaffaqiyatli savdo · 5.0 ⭐
+                    <div className="seller-sub-stats">
+                      5.0 ⭐ · 100% Ishonchli Sotuvchi
                     </div>
                   </div>
                 </div>
+
+                {listing.seller?.telegram_username && (
+                  <a
+                    href={`https://t.me/${listing.seller.telegram_username.replace("@", "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="seller-tg-btn"
+                  >
+                    <MessageCircle size={14} />
+                    <span>Sotuvchiga Savol Berish (@{listing.seller.telegram_username.replace("@", "")})</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .listing-detail-root {
+          padding-top: 88px;
+          min-height: 100vh;
+          background: #030712;
+          color: #FFF;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .detail-container {
+          padding-top: 24px;
+          padding-bottom: 80px;
+        }
+
+        .detail-breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+          font-size: 13.5px;
+          color: rgba(156, 163, 175, 0.8);
+          flex-wrap: wrap;
+        }
+        .breadcrumb-back-link, .breadcrumb-platform-link {
+          color: rgba(209, 213, 219, 0.85);
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          transition: color 0.15s;
+        }
+        .breadcrumb-back-link:hover, .breadcrumb-platform-link:hover {
+          color: #60A5FA;
+        }
+        .breadcrumb-current-title {
+          color: #FFF;
+          font-weight: 600;
+        }
+        .sep { color: rgba(156, 163, 175, 0.4); }
+
+        .detail-main-grid {
+          display: grid;
+          grid-template-columns: 1fr 380px;
+          gap: 32px;
+          align-items: start;
+        }
+
+        .detail-hero-image-box {
+          width: 100%;
+          height: 360px;
+          border-radius: 24px;
+          overflow: hidden;
+          background: rgba(10, 16, 32, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 24px;
+        }
+
+        .detail-main-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .detail-fallback-banner {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #091228 0%, #152244 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+        .fallback-bg-art {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+          background-size: 20px 20px;
+        }
+        .fallback-meta {
+          position: relative;
+          z-index: 2;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+        .fallback-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(37, 99, 235, 0.25);
+          border: 1px solid rgba(59, 130, 246, 0.4);
+          padding: 4px 12px;
+          border-radius: 999px;
+          font-size: 12px;
+          color: #93C5FD;
+          font-weight: 700;
+        }
+        .fallback-ovr-text {
+          font-family: 'Outfit', sans-serif;
+          font-size: 24px;
+          font-weight: 800;
+          color: #FFF;
+        }
+
+        .hero-top-badges {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          z-index: 3;
+        }
+        .badge-platform-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(8, 14, 30, 0.85);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #FFF;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 8px;
+        }
+        .badge-ovr-tag {
+          background: #F59E0B;
+          color: #000;
+          font-size: 12px;
+          font-weight: 800;
+          padding: 4px 10px;
+          border-radius: 8px;
+        }
+
+        .hero-bottom-guarantee {
+          position: absolute;
+          bottom: 14px;
+          right: 14px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(8, 14, 30, 0.88);
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #34D399;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 5px 12px;
+          border-radius: 8px;
+          z-index: 3;
+        }
+
+        .detail-title-card {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .detail-main-heading {
+          font-family: 'Outfit', sans-serif;
+          font-size: clamp(22px, 3vw, 30px);
+          font-weight: 800;
+          color: #FFF;
+          line-height: 1.25;
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+
+        .detail-specs-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+          gap: 12px;
+        }
+        .spec-stat-card {
+          background: rgba(10, 16, 32, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 14px;
+          padding: 12px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .stat-label {
+          font-size: 11px;
+          color: rgba(156, 163, 175, 0.8);
+          font-weight: 600;
+        }
+        .stat-value {
+          font-family: 'Outfit', sans-serif;
+          font-size: 18px;
+          font-weight: 800;
+          color: #FFF;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .featured-players-box {
+          background: rgba(10, 16, 32, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 18px;
+          padding: 18px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .box-title-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #FFF;
+        }
+        .players-chip-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .player-badge-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(37, 99, 235, 0.12);
+          border: 1px solid rgba(37, 99, 235, 0.25);
+          color: #93C5FD;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 6px 12px;
+          border-radius: 8px;
+        }
+
+        .detail-desc-box {
+          background: rgba(10, 16, 32, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 18px;
+          padding: 20px 22px;
+        }
+        .desc-heading {
+          font-family: 'Outfit', sans-serif;
+          font-size: 16px;
+          font-weight: 700;
+          color: #FFF;
+          margin: 0 0 10px 0;
+        }
+        .desc-content {
+          font-size: 14px;
+          color: rgba(209, 213, 219, 0.9);
+          line-height: 1.65;
+          white-space: pre-line;
+        }
+
+        .escrow-guarantee-card {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(37, 99, 235, 0.06) 100%);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          border-radius: 18px;
+          padding: 20px 22px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .guarantee-head {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .guarantee-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          color: #FFF;
+        }
+        .guarantee-items-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          font-size: 12.5px;
+          color: rgba(209, 213, 219, 0.85);
+        }
+        .guarantee-point {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+
+        /* Sidebar Checkout Card */
+        .detail-checkout-sidebar {
+          position: sticky;
+          top: 100px;
+        }
+        .checkout-action-card {
+          background: rgba(10, 16, 32, 0.9);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.7);
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .price-summary-row {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .price-meta-label {
+          font-size: 11.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: rgba(156, 163, 175, 0.7);
+        }
+        .price-hero-stack {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+        .price-big-usd {
+          font-family: 'Outfit', sans-serif;
+          font-size: 36px;
+          font-weight: 900;
+          color: #34D399;
+          line-height: 1;
+        }
+        .price-sub-uzs {
+          font-size: 13px;
+          color: rgba(156, 163, 175, 0.8);
+        }
+
+        .checkout-checklist {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 14px 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .check-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 13px;
+        }
+        .check-row .label { color: rgba(156, 163, 175, 0.8); }
+        .check-row .val { font-weight: 600; color: #FFF; }
+
+        .btn-instant-buy {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 14px 20px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+          color: #FFF;
+          font-size: 15px;
+          font-weight: 700;
+          text-decoration: none;
+          box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45);
+          transition: transform 0.2s;
+        }
+        .btn-instant-buy:hover {
+          transform: translateY(-1.5px);
+        }
+
+        .seller-summary-block {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding-top: 8px;
+        }
+        .seller-block-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: rgba(156, 163, 175, 0.6);
+        }
+        .seller-profile-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .seller-bubble-av {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: #10B981;
+          color: #FFF;
+          font-weight: 800;
+          font-size: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .seller-info-stack {
+          display: flex;
+          flex-direction: column;
+        }
+        .seller-verified-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #FFF;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .seller-sub-stats {
+          font-size: 11.5px;
+          color: rgba(156, 163, 175, 0.7);
+        }
+        .seller-tg-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 12px;
+          border-radius: 8px;
+          background: rgba(37, 99, 235, 0.1);
+          color: #60A5FA;
+          font-size: 12px;
+          font-weight: 600;
+          text-decoration: none;
+        }
+
+        /* Responsive Breakpoint */
+        @media (max-width: 900px) {
+          .detail-main-grid {
+            grid-template-columns: 1fr;
+          }
+          .detail-hero-image-box {
+            height: 240px;
+          }
+          .guarantee-items-grid {
+            grid-template-columns: 1fr;
+          }
+          .detail-checkout-sidebar {
+            position: static;
+          }
+        }
+      `}</style>
     </div>
   );
 }

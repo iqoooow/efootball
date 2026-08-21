@@ -1,20 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeftRight,
-  ChevronDown,
-  Zap,
-  ShieldCheck,
-  CircleDollarSign,
-  ArrowRight,
+  Trophy,
   Sparkles,
+  Flame,
   Star,
+  Users,
+  ShieldCheck,
+  Zap,
+  ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Flame,
-  Coins,
+  Bell,
+  CheckCircle2,
+  Calendar,
+  DollarSign,
+  Gamepad2,
+  Medal,
+  Crown,
+  Swords,
+  Layers,
   Send,
 } from "lucide-react";
 import Link from "next/link";
@@ -49,497 +56,675 @@ export function CoinIcon({
   );
 }
 
-/* ─── Real eFootball Coin Pricing Constants (2026 Market Rates) ──── */
-// 1 USD = 13,000 UZS
-const UZS_EXCHANGE_RATE = 13000;
+/* ─── TournamentsTeaser (Ultra-Premium "Tez Kunda" Cybersport Arena) ─ */
+export function TournamentsTeaser() {
+  const [selectedFormat, setSelectedFormat] = useState<number>(0);
+  const [contactInput, setContactInput] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-export const REAL_COIN_PACKS = [
-  { label: "520", coins: 520, priceUsd: 4.20, discount: null },
-  { label: "1,050", coins: 1050, priceUsd: 7.90, discount: "🔥 Ommabop" },
-  { label: "2,130", coins: 2130, priceUsd: 14.90, discount: "-5%" },
-  { label: "3,250", coins: 3250, priceUsd: 21.90, discount: "-8%" },
-  { label: "5,700", coins: 5700, priceUsd: 36.90, discount: "-12%" },
-  { label: "12,800", coins: 12800, priceUsd: 78.90, discount: "-18%" },
-];
+  const tournaments = [
+    {
+      id: "weekend-pro",
+      title: "Weekend Pro Cup (1v1)",
+      tag: "🔥 Eng Kutilayotgan",
+      badgeColor: "#FBBF24",
+      prize: "$300 + 3,900,000 so'm",
+      format: "Play-off (Olympic System), Best of 3",
+      slots: "64 ishtirokchi",
+      platform: "📱 Mobile (iOS / Android)",
+      duration: "Har shanba va yakshanba",
+      desc: "Haftaning eng kuchli eFootball ustalari o'rtasidagi shiddatli to'qnashuv. 1-o'rin uchun to'g'ridan-to'g'ri naqd pul mukofoti.",
+      rules: ["100% Escrow kafolatlangan fond", "Avtomatlashgan hisob-kitob", "Jonli translatsiya"],
+    },
+    {
+      id: "champions-league",
+      title: "eFootball National League",
+      tag: "👑 Katta Chempionat",
+      badgeColor: "#60A5FA",
+      prize: "$1,000+ Grand Prize",
+      format: "Guruh bosqichi + Grand Final",
+      slots: "128 ishtirokchi",
+      platform: "🎮 Barcha platformalar",
+      duration: "Mavsumiy (1 oy)",
+      desc: "O'zbekistonning eng nufuzli kiberfutbol chempionati. Rasmiy kubok va reyting ochkolari jamg'armasi.",
+      rules: ["Rasmiy Cybersport reytingi", "Eksklyuziv chempionlik kubogi", "Cyber Rating oshishi"],
+    },
+    {
+      id: "daily-blitz",
+      title: "Fast Blitz Cup (Kunlik)",
+      tag: "⚡ Tezkor Turnir",
+      badgeColor: "#34D399",
+      prize: "$50 (Kunlik tezkor yutuq)",
+      format: "16 kishilik Single Elimination",
+      slots: "16 ishtirokchi",
+      platform: "📱 Mobile & 🎮 PS5",
+      duration: "Har kuni 20:00 da",
+      desc: "Vaqtingiz kammi? 1 soat ichida g'olib bo'ling va sovrinni bir zumda Payme yoki Click orqali qabul qiling.",
+      rules: ["15 daqiqada yakun", "Tezkor to'lov kafolati", "Barcha darajadagi o'yinchilar"],
+    },
+  ];
 
-/**
- * Calculates price for any coin amount based on market tiered rates.
- */
-function calculateUsdFromCoinCount(coins: number): number {
-  if (coins <= 0) return 0;
-  // Base tier: $0.0076 per coin
-  let rate = 0.0076;
-  if (coins >= 12000) rate = 0.00616; // ~18% discount
-  else if (coins >= 5000) rate = 0.00647; // ~12% discount
-  else if (coins >= 3000) rate = 0.00674; // ~8% discount
-  else if (coins >= 2000) rate = 0.0070; // ~5% discount
-  else if (coins >= 1000) rate = 0.00752;
+  const currentT = tournaments[selectedFormat];
 
-  return Math.max(0.99, Number((coins * rate).toFixed(2)));
-}
-
-function calculateCoinsFromUsdAmount(usd: number): number {
-  if (usd <= 0) return 0;
-  let rate = 0.0075;
-  if (usd >= 70) rate = 0.00616;
-  else if (usd >= 35) rate = 0.00647;
-  else if (usd >= 20) rate = 0.00674;
-  else if (usd >= 14) rate = 0.0070;
-
-  return Math.round(usd / rate);
-}
-
-/* ─── CoinCalculator Component (100% Real eFootball Rates) ──────── */
-export function CoinCalculator() {
-  const router = useRouter();
-
-  // Selected coin pack or custom amount
-  const [selectedCoins, setSelectedCoins] = useState<number>(1050);
-  const [usdAmount, setUsdAmount] = useState<number>(7.90);
-
-  const [isUsdFocused, setIsUsdFocused] = useState(false);
-  const [isCoinFocused, setIsCoinFocused] = useState(false);
-
-  const [usdEditText, setUsdEditText] = useState("");
-  const [coinEditText, setCoinEditText] = useState("");
-
-  const handleCoinChange = (valStr: string) => {
-    setCoinEditText(valStr);
-    const n = parseInt(valStr.replace(/[^0-9]/g, ""), 10) || 0;
-    setSelectedCoins(n);
-    const matchedPack = REAL_COIN_PACKS.find((p) => p.coins === n);
-    if (matchedPack) {
-      setUsdAmount(matchedPack.priceUsd);
-    } else {
-      setUsdAmount(calculateUsdFromCoinCount(n));
-    }
+  const handleNotifySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactInput.trim()) return;
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSubscribed(true);
+    }, 600);
   };
-
-  const handleUsdChange = (valStr: string) => {
-    setUsdEditText(valStr);
-    const usd = parseFloat(valStr.replace(/[^0-9.]/g, "")) || 0;
-    setUsdAmount(usd);
-    const calcCoins = calculateCoinsFromUsdAmount(usd);
-    setSelectedCoins(calcCoins);
-  };
-
-  const handleSelectPack = (pack: typeof REAL_COIN_PACKS[0]) => {
-    setSelectedCoins(pack.coins);
-    setUsdAmount(pack.priceUsd);
-    setCoinEditText(pack.coins.toString());
-    setUsdEditText(pack.priceUsd.toFixed(2));
-  };
-
-  const uzsTotal = Math.round(usdAmount * UZS_EXCHANGE_RATE);
-  const uzsFormatted = uzsTotal.toLocaleString("uz-UZ");
-
-  const displayedUsd = isUsdFocused
-    ? usdEditText
-    : usdAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const displayedCoins = isCoinFocused
-    ? coinEditText
-    : selectedCoins.toLocaleString("en-US");
 
   return (
-    <div
-      style={{
-        background: "rgba(10, 16, 32, 0.85)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        borderRadius: "var(--radius-xl)",
-        overflow: "hidden",
-        boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.7)",
-      }}
-    >
+    <div className="tournaments-teaser-root" id="turnirlar">
+      {/* Ambient Glows */}
+      <div className="teaser-glow-amber" />
+      <div className="teaser-glow-blue" />
+
       {/* Header */}
-      <div
-        style={{
-          padding: "20px 28px",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              background: "rgba(37, 99, 235, 0.15)",
-              border: "1px solid rgba(37, 99, 235, 0.3)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Coins size={20} color="var(--accent-primary)" />
-          </div>
-          <div>
-            <h3
-              style={{
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: 17,
-                fontWeight: 800,
-                color: "#FFF",
-                margin: 0,
-              }}
-            >
-              eFootball™ Coins Kalkulyatori
-            </h3>
-            <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "2px 0 0" }}>
-              Konami ID orqali lahzali va 100% xavfsiz to&apos;lov
-            </p>
-          </div>
+      <div className="teaser-header">
+        <div className="teaser-badge-row">
+          <span className="teaser-badge">
+            <Trophy size={13} className="text-amber" />
+            <span>eFootball™ 2026 Cybersport Arena</span>
+            <span className="soon-pill">TEZ KUNDA</span>
+          </span>
         </div>
 
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--accent-emerald)",
-            background: "rgba(16, 185, 129, 0.12)",
-            border: "1px solid rgba(16, 185, 129, 0.25)",
-            padding: "4px 10px",
-            borderRadius: 999,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-          }}
-        >
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-          1 USD ≈ 13,000 so&apos;m
-        </span>
+        <h2 className="teaser-title">
+          Sovrinli Turnirlar va Professional Chempionatlar
+        </h2>
+        <p className="teaser-subtitle">
+          eFootball Zone platformasida yaqin kunlarda O&apos;zbekistonning eng katta mukofot jamg&apos;armasiga ega haftalik va kunlik kiberfutbol ligalari start oladi.
+        </p>
       </div>
 
-      {/* Inputs Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 48px 1fr",
-          alignItems: "stretch",
-        }}
-        className="calc-grid"
-      >
-        {/* Left: To'laysiz (USD) */}
-        <div style={{ padding: "24px 28px", minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--text-muted)",
-              marginBottom: 10,
-            }}
-          >
-            To&apos;laysiz (Narx)
-          </div>
+      {/* Interactive Showcase Grid */}
+      <div className="teaser-main-card">
+        {/* Left: Tournament Format Selector Tabs */}
+        <div className="teaser-tabs-column">
+          <div className="column-title">Rejalashtirilgan Turnir Formatlari</div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              background: isUsdFocused
-                ? "rgba(37, 99, 235, 0.12)"
-                : "rgba(255, 255, 255, 0.04)",
-              border: isUsdFocused
-                ? "1px solid var(--accent-primary)"
-                : "1px solid rgba(255, 255, 255, 0.08)",
-              borderRadius: "var(--radius-md)",
-              padding: "10px 16px",
-              gap: 10,
-              transition: "all 0.15s ease",
-            }}
-          >
-            <input
-              type="text"
-              inputMode="decimal"
-              value={displayedUsd}
-              onChange={(e) => handleUsdChange(e.target.value)}
-              onFocus={() => {
-                setIsUsdFocused(true);
-                setUsdEditText(usdAmount > 0 ? usdAmount.toFixed(2) : "");
-              }}
-              onBlur={() => setIsUsdFocused(false)}
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: 24,
-                fontWeight: 800,
-                color: "#FFF",
-                width: "100%",
-                minWidth: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--accent-primary)",
-                background: "rgba(37, 99, 235, 0.15)",
-                border: "1px solid rgba(37, 99, 235, 0.3)",
-                padding: "4px 10px",
-                borderRadius: 8,
-              }}
-            >
-              USD ($)
-            </span>
-          </div>
-
-          <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--text-secondary)", fontWeight: 500 }}>
-            ≈ <strong>{uzsFormatted}</strong> so&apos;m
-          </div>
-        </div>
-
-        {/* Center Swap Divider */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              width: 1,
-              height: "100%",
-              background: "rgba(255, 255, 255, 0.06)",
-              position: "absolute",
-            }}
-          />
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              background: "rgba(10, 16, 32, 0.95)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              zIndex: 2,
-            }}
-          >
-            <ArrowLeftRight size={15} color="var(--text-secondary)" />
-          </div>
-        </div>
-
-        {/* Right: Olasiz (eFootball Coins) */}
-        <div style={{ padding: "24px 28px", minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--text-muted)",
-              marginBottom: 10,
-            }}
-          >
-            Olasiz (Coins)
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              background: isCoinFocused
-                ? "rgba(245, 158, 11, 0.12)"
-                : "rgba(255, 255, 255, 0.04)",
-              border: isCoinFocused
-                ? "1px solid var(--accent-amber)"
-                : "1px solid rgba(255, 255, 255, 0.08)",
-              borderRadius: "var(--radius-md)",
-              padding: "10px 16px",
-              gap: 10,
-              transition: "all 0.15s ease",
-            }}
-          >
-            <input
-              type="text"
-              inputMode="numeric"
-              value={displayedCoins}
-              onChange={(e) => handleCoinChange(e.target.value)}
-              onFocus={() => {
-                setIsCoinFocused(true);
-                setCoinEditText(selectedCoins > 0 ? selectedCoins.toString() : "");
-              }}
-              onBlur={() => setIsCoinFocused(false)}
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: 24,
-                fontWeight: 800,
-                color: "#FFF",
-                width: "100%",
-                minWidth: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--accent-amber)",
-                background: "rgba(245, 158, 11, 0.15)",
-                border: "1px solid rgba(245, 158, 11, 0.3)",
-                padding: "4px 10px",
-                borderRadius: 8,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <CoinIcon size={14} /> Coins
-            </span>
-          </div>
-
-          <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--text-muted)" }}>
-            eFootball™ 2026 Balans
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Select Preset Packs */}
-      <div
-        style={{
-          padding: "16px 28px",
-          borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          flexWrap: "wrap",
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: "var(--text-muted)",
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            marginRight: 4,
-          }}
-        >
-          Paketlar:
-        </span>
-        {REAL_COIN_PACKS.map((pack) => {
-          const isSelected = selectedCoins === pack.coins;
-          return (
-            <button
-              key={pack.coins}
-              type="button"
-              onClick={() => handleSelectPack(pack)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "7px 14px",
-                borderRadius: 999,
-                border: isSelected
-                  ? "1.5px solid var(--accent-primary)"
-                  : "1px solid rgba(255, 255, 255, 0.1)",
-                background: isSelected
-                  ? "rgba(37, 99, 235, 0.25)"
-                  : "rgba(255, 255, 255, 0.03)",
-                color: isSelected ? "#FFF" : "var(--text-secondary)",
-                fontSize: 13,
-                fontWeight: isSelected ? 800 : 600,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                fontFamily: "'Outfit', sans-serif",
-              }}
-            >
-              <CoinIcon size={13} color={isSelected ? "#FFF" : "#FBBF24"} />
-              <span>{pack.label}</span>
-              {pack.discount && (
-                <span
-                  style={{
-                    fontSize: 9.5,
-                    fontWeight: 700,
-                    color: isSelected ? "#FFF" : "var(--accent-emerald)",
-                    background: isSelected
-                      ? "var(--accent-emerald)"
-                      : "rgba(16, 185, 129, 0.15)",
-                    padding: "1px 5px",
-                    borderRadius: 4,
-                  }}
+          <div className="tabs-list">
+            {tournaments.map((t, idx) => {
+              const isActive = idx === selectedFormat;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedFormat(idx)}
+                  className={`tournament-tab-btn ${isActive ? "active" : ""}`}
                 >
-                  {pack.discount}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Trust & Action CTA */}
-      <div style={{ padding: "20px 28px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-secondary)" }}>
-            <Zap size={14} className="text-amber" />
-            <span>Yetkazib berish: <strong>15-30 daqiqa</strong></span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-secondary)" }}>
-            <ShieldCheck size={14} className="text-emerald" />
-            <span>Escrow Kafolati: <strong>100% Himoyalangan</strong></span>
+                  <div className="tab-btn-header">
+                    <span className="tab-tag" style={{ color: t.badgeColor }}>
+                      {t.tag}
+                    </span>
+                    <span className="tab-status-chip">Tez kunda</span>
+                  </div>
+                  <div className="tab-name">{t.title}</div>
+                  <div className="tab-prize-row">
+                    <Medal size={13} className="text-amber" />
+                    <span>{t.prize}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <a
-          href={`https://t.me/efzone_admin?text=${encodeURIComponent(
-            `Assalomu alaykum! Men eFootball 2026 uchun ${selectedCoins.toLocaleString()} Coin ($${usdAmount.toFixed(2)} / ${uzsFormatted} so'm) xarid qilmoqchiman.`
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-primary"
-          style={{
-            width: "100%",
-            padding: "14px",
-            fontSize: 15,
-            fontWeight: 700,
-            borderRadius: "var(--radius-md)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            textDecoration: "none",
-          }}
-        >
-          <Send size={16} />
-          <span>Coin Xarid Qilish ({selectedCoins.toLocaleString()} Coins — ${usdAmount.toFixed(2)})</span>
-          <ArrowRight size={16} />
-        </a>
+        {/* Right: Detailed Format Showcase & Early Access Form */}
+        <div className="teaser-detail-column">
+          <div className="detail-top-card">
+            <div className="detail-header-flex">
+              <div>
+                <span className="detail-category-tag">{currentT.tag}</span>
+                <h3 className="detail-title">{currentT.title}</h3>
+              </div>
+
+              <div className="detail-prize-box">
+                <div className="prize-label">Sovrin Jamg&apos;armasi</div>
+                <div className="prize-amount">{currentT.prize}</div>
+              </div>
+            </div>
+
+            <p className="detail-description">{currentT.desc}</p>
+
+            {/* Spec grid */}
+            <div className="detail-specs-grid">
+              <div className="spec-card">
+                <div className="spec-icon-box">
+                  <Swords size={16} className="text-blue" />
+                </div>
+                <div className="spec-info">
+                  <span className="spec-label">Format:</span>
+                  <span className="spec-val">{currentT.format}</span>
+                </div>
+              </div>
+
+              <div className="spec-card">
+                <div className="spec-icon-box">
+                  <Users size={16} className="text-emerald" />
+                </div>
+                <div className="spec-info">
+                  <span className="spec-label">Ishtirokchilar:</span>
+                  <span className="spec-val">{currentT.slots}</span>
+                </div>
+              </div>
+
+              <div className="spec-card">
+                <div className="spec-icon-box">
+                  <Gamepad2 size={16} className="text-amber" />
+                </div>
+                <div className="spec-info">
+                  <span className="spec-label">Platforma:</span>
+                  <span className="spec-val">{currentT.platform}</span>
+                </div>
+              </div>
+
+              <div className="spec-card">
+                <div className="spec-icon-box">
+                  <Calendar size={16} className="text-purple" />
+                </div>
+                <div className="spec-info">
+                  <span className="spec-label">Vaqti:</span>
+                  <span className="spec-val">{currentT.duration}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Checkpoints */}
+            <div className="rules-check-list">
+              {currentT.rules.map((rule, i) => (
+                <div key={i} className="rule-item">
+                  <CheckCircle2 size={14} className="text-emerald" />
+                  <span>{rule}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Early Access Notification Form */}
+          <div className="early-access-box">
+            <div className="access-info-row">
+              <div className="access-icon-bubble">
+                <Bell size={18} className="text-amber" />
+              </div>
+              <div>
+                <div className="access-title">
+                  Turnirlar ochilishi bilan birinchi bo&apos;lib xabardor bo&apos;ling
+                </div>
+                <div className="access-sub">
+                  Telegram username yoki emailingizni qoldiring va ilk turnirga eksklyuziv taklifnoma oling
+                </div>
+              </div>
+            </div>
+
+            {subscribed ? (
+              <div className="access-success-box animate-fade-in">
+                <CheckCircle2 size={20} className="text-emerald" />
+                <div>
+                  <strong>Arizangiz qabul qilindi!</strong> Turnir ro&apos;yxatdan o&apos;tishi ochilgach, sizga birinchi bo&apos;lib xabar yuboriladi.
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleNotifySubmit} className="access-form">
+                <input
+                  type="text"
+                  required
+                  value={contactInput}
+                  onChange={(e) => setContactInput(e.target.value)}
+                  placeholder="@telegram_username yoki emailingiz..."
+                  className="access-input"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="access-submit-btn"
+                >
+                  {loading ? (
+                    "Yuborilmoqda..."
+                  ) : (
+                    <>
+                      <span>Taklifnoma Olish</span>
+                      <ArrowRight size={14} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
       </div>
 
+      {/* Feature Guarantee Row */}
+      <div className="teaser-features-row">
+        <div className="teaser-feature-pill">
+          <ShieldCheck size={16} className="text-emerald" />
+          <span>100% Escrow Kafolatlangan Sovrin Jamg&apos;armasi</span>
+        </div>
+        <div className="teaser-feature-pill">
+          <Zap size={16} className="text-amber" />
+          <span>Avtomatlashgan To&apos;lov (Payme / Click / Uzcard)</span>
+        </div>
+        <div className="teaser-feature-pill">
+          <Trophy size={16} className="text-blue" />
+          <span>Milliy Cybersport Reyting Jadvali</span>
+        </div>
+      </div>
+
+      {/* Embedded CSS */}
       <style>{`
-        @media (max-width: 640px) {
-          .calc-grid {
-            grid-template-columns: 1fr !important;
-            gap: 12px;
+        .tournaments-teaser-root {
+          position: relative;
+          background: rgba(8, 14, 32, 0.78);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 28px;
+          padding: 40px 36px;
+          box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.75);
+          overflow: hidden;
+        }
+
+        .teaser-glow-amber {
+          position: absolute;
+          top: -120px;
+          right: -80px;
+          width: 320px;
+          height: 320px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .teaser-glow-blue {
+          position: absolute;
+          bottom: -100px;
+          left: -80px;
+          width: 300px;
+          height: 300px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .teaser-header {
+          text-align: center;
+          max-width: 680px;
+          margin: 0 auto 34px auto;
+        }
+        .teaser-badge-row {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 12px;
+        }
+        .teaser-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 5px 14px;
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          border-radius: 999px;
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #FFF;
+        }
+        .soon-pill {
+          background: #F59E0B;
+          color: #000;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2px 6px;
+          border-radius: 6px;
+          letter-spacing: 0.04em;
+        }
+        .teaser-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: clamp(24px, 3.2vw, 34px);
+          font-weight: 800;
+          color: #FFF;
+          line-height: 1.2;
+          margin: 0 0 10px 0;
+          letter-spacing: -0.02em;
+        }
+        .teaser-subtitle {
+          font-size: 14.5px;
+          color: rgba(209, 213, 219, 0.85);
+          line-height: 1.55;
+          margin: 0;
+        }
+
+        .teaser-main-card {
+          display: grid;
+          grid-template-columns: 320px 1fr;
+          gap: 24px;
+          margin-bottom: 30px;
+        }
+
+        /* Tabs Column */
+        .teaser-tabs-column {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .column-title {
+          font-size: 11.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: rgba(156, 163, 175, 0.7);
+          padding-left: 4px;
+        }
+        .tabs-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .tournament-tab-btn {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 16px;
+          padding: 16px 18px;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .tournament-tab-btn:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+        .tournament-tab-btn.active {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(245, 158, 11, 0.1) 100%);
+          border-color: rgba(245, 158, 11, 0.4);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        .tab-btn-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .tab-tag {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+        }
+        .tab-status-chip {
+          font-size: 10px;
+          color: rgba(156, 163, 175, 0.8);
+          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 600;
+        }
+        .tab-name {
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          color: #FFF;
+        }
+        .tab-prize-row {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #FBBF24;
+        }
+
+        /* Detail Column */
+        .teaser-detail-column {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .detail-top-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 20px;
+          padding: 24px 26px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .detail-header-flex {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .detail-category-tag {
+          font-size: 11px;
+          font-weight: 800;
+          color: #FBBF24;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .detail-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 22px;
+          font-weight: 800;
+          color: #FFF;
+          margin: 4px 0 0 0;
+        }
+        .detail-prize-box {
+          text-align: right;
+          background: rgba(245, 158, 11, 0.1);
+          border: 1px solid rgba(245, 158, 11, 0.25);
+          border-radius: 12px;
+          padding: 8px 14px;
+        }
+        .prize-label {
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: rgba(245, 158, 11, 0.85);
+        }
+        .prize-amount {
+          font-family: 'Outfit', sans-serif;
+          font-size: 18px;
+          font-weight: 800;
+          color: #FBBF24;
+        }
+        .detail-description {
+          font-size: 13.5px;
+          color: rgba(209, 213, 219, 0.9);
+          line-height: 1.55;
+          margin: 0;
+        }
+
+        .detail-specs-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+        .spec-card {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          padding: 10px 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .spec-icon-box {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.05);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .spec-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .spec-label {
+          font-size: 10.5px;
+          color: rgba(156, 163, 175, 0.7);
+        }
+        .spec-val {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #FFF;
+        }
+
+        .rules-check-list {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          flex-wrap: wrap;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .rule-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(229, 231, 235, 0.9);
+        }
+
+        /* Early Access Box */
+        .early-access-box {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+          border: 1px solid rgba(37, 99, 235, 0.3);
+          border-radius: 18px;
+          padding: 20px 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .access-info-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .access-icon-bubble {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          background: rgba(245, 158, 11, 0.15);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .access-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #FFF;
+        }
+        .access-sub {
+          font-size: 12px;
+          color: rgba(209, 213, 219, 0.8);
+          margin-top: 2px;
+        }
+        .access-form {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .access-input {
+          flex: 1;
+          background: rgba(6, 11, 26, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 12px;
+          padding: 11px 16px;
+          font-size: 13.5px;
+          color: #FFF;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .access-input:focus {
+          border-color: #60A5FA;
+        }
+        .access-submit-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 11px 20px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+          border: none;
+          color: #FFF;
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 4px 18px rgba(37, 99, 235, 0.35);
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+        .access-submit-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 22px rgba(37, 99, 235, 0.5);
+        }
+        .access-success-box {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 16px;
+          background: rgba(16, 185, 129, 0.15);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 12px;
+          font-size: 13px;
+          color: #FFF;
+        }
+
+        /* Bottom Feature Pills */
+        .teaser-features-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding-top: 18px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .teaser-feature-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: rgba(209, 213, 219, 0.85);
+          background: rgba(255, 255, 255, 0.03);
+          padding: 6px 14px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Color classes */
+        .text-amber { color: #FBBF24; }
+        .text-blue { color: #60A5FA; }
+        .text-emerald { color: #34D399; }
+        .text-purple { color: #C084FC; }
+
+        @media (max-width: 860px) {
+          .tournaments-teaser-root {
+            padding: 28px 20px;
+          }
+          .teaser-main-card {
+            grid-template-columns: 1fr;
+          }
+          .detail-specs-grid {
+            grid-template-columns: 1fr;
+          }
+          .access-form {
+            flex-direction: column;
+          }
+          .access-submit-btn {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>
@@ -554,6 +739,7 @@ interface HeroFeaturedProps {
 
 export function HeroFeaturedGlassCard({ listings = [] }: HeroFeaturedProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const UZS_EXCHANGE_RATE = 13000;
 
   // Filter to active listings or fallback
   const items = listings.length > 0 ? listings.slice(0, 5) : [];

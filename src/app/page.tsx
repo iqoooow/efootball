@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { fetchListings, fetchStats } from "@/lib/dataService";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { HeroFeaturedGlassCard, CoinCalculator } from "@/components/home/InteractiveWidgets";
+import { HeroFeaturedGlassCard, TournamentsTeaser } from "@/components/home/InteractiveWidgets";
 
 export default async function HomePage() {
   const [{ listings }, stats] = await Promise.all([
@@ -114,8 +114,8 @@ export default async function HomePage() {
                   textShadow: "0 2px 20px rgba(0, 0, 0, 0.8)",
                 }}
               >
-                eFootball Akauntlari va Coin'larni{" "}
-                <span style={{ color: "var(--accent-primary)" }}>Kafolatlangan</span> Narxda Sotib Oling
+                eFootball Akauntlari va Turnirlar{" "}
+                <span style={{ color: "var(--accent-primary)" }}>Kafolatlangan</span> Narxda
               </h1>
 
               <p
@@ -128,7 +128,7 @@ export default async function HomePage() {
                   textShadow: "0 2px 10px rgba(0, 0, 0, 0.7)",
                 }}
               >
-                Saralangan o&apos;yinchilarga ega tayyor hisoblar hamda Coin'larni 100% Escrow himoyasi bilan xavfsiz va qulay xarid qiling.
+                Saralangan o&apos;yinchilarga ega tayyor hisoblar hamda sovrinli chempionatlarni 100% Escrow himoyasi bilan xavfsiz va qulay kashf qiling.
               </p>
 
               {/* Action CTAs */}
@@ -136,8 +136,8 @@ export default async function HomePage() {
                 <Link href="/listings" className="btn btn-primary" style={{ fontSize: 14, padding: "12px 24px" }}>
                   <Gamepad2 size={16} /> Akauntlarni Ko&apos;rish <ArrowRight size={15} />
                 </Link>
-                <a href="#coins-kalkulyator" className="btn btn-secondary" style={{ fontSize: 14, padding: "12px 24px", background: "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(12px)" }}>
-                  <Coins size={16} color="var(--accent-amber)" /> Coin Kalkulyatori
+                <a href="#turnirlar" className="btn btn-secondary" style={{ fontSize: 14, padding: "12px 24px", background: "rgba(255, 255, 255, 0.12)", backdropFilter: "blur(12px)" }}>
+                  <Sparkles size={16} color="var(--accent-amber)" /> 🏆 Turnirlar (Tez Kunda)
                 </a>
               </div>
             </div>
@@ -248,7 +248,7 @@ export default async function HomePage() {
                 Sara eFootball Takliflari
               </h2>
               <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>
-                Eng mashhur hisoblar va foydali tanga paketlari
+                Eng mashhur va kuchli jamoa tarkibiga ega hisoblar
               </p>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -294,12 +294,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Coin Calculator Section */}
-      <section id="coins-kalkulyator" style={{ padding: "16px 0 64px", background: "transparent" }}>
+      {/* Tournaments Teaser Arena Section (Replaces Old Coin Calculator) */}
+      <section style={{ padding: "16px 0 64px", background: "transparent" }}>
         <div className="container">
-          <div style={{ maxWidth: 880, margin: "0 auto" }}>
-            <CoinCalculator />
-          </div>
+          <TournamentsTeaser />
         </div>
       </section>
 
