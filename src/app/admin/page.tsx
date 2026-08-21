@@ -773,6 +773,7 @@ export default function AdminPage() {
               type="button"
               onClick={() => setSidebarOpen(true)}
               className="mobile-sidebar-toggle-btn"
+              aria-label="Admin menyuni ochish"
             >
               <Menu size={20} />
             </button>
@@ -782,18 +783,18 @@ export default function AdminPage() {
               <ChevronRight size={14} className="breadcrumb-sep" />
               <span className="breadcrumb-current">
                 {activeTab === "overview" && "Umumiy Ko'rinish"}
-                {activeTab === "moderation" && "Moderatsiya & Yangi Arizalar"}
-                {activeTab === "users" && "Foydalanuvchilar va Rollar"}
-                {activeTab === "listings" && "Barcha E'lonlar Boshqaruvi"}
-                {activeTab === "orders" && "Savdolar & Escrow Himoyasi"}
+                {activeTab === "moderation" && "Moderatsiya & Arizalar"}
+                {activeTab === "users" && "Foydalanuvchilar"}
+                {activeTab === "listings" && "E'lonlar Boshqaruvi"}
+                {activeTab === "orders" && "Savdolar & Escrow"}
               </span>
             </div>
           </div>
 
           <div className="topbar-right">
-            <div className="connection-status-pill">
+            <div className="connection-status-pill" title="Supabase Realtime Ulangan">
               <span className="status-live-dot" />
-              <span>Supabase Realtime</span>
+              <span className="status-pill-text">Realtime</span>
             </div>
 
             <button
@@ -813,6 +814,35 @@ export default function AdminPage() {
             </button>
           </div>
         </header>
+
+        {/* Mobile Horizontal Quick Tabs Bar (Visible on mobile/tablet) */}
+        <div className="mobile-admin-tabs-bar">
+          {[
+            { key: "overview", label: "Umumiy", icon: BarChart2, count: null },
+            { key: "moderation", label: "Moderatsiya", icon: Clock, count: pendingModerationCount },
+            { key: "users", label: "Foydalanuvchilar", icon: Users, count: users.length },
+            { key: "listings", label: "E'lonlar", icon: Package, count: listings.length },
+            { key: "orders", label: "Savdolar", icon: ShoppingBag, count: orders.length },
+          ].map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key as AdminTab)}
+                className={`mobile-tab-pill-btn ${isActive ? "active" : ""}`}
+              >
+                <tab.icon size={14} />
+                <span>{tab.label}</span>
+                {tab.count !== null && (
+                  <span className={`tab-chip-counter ${tab.key === "moderation" && pendingModerationCount > 0 ? "highlight-amber" : ""}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Content Body Area */}
         <main className="admin-content-scroll">
@@ -2681,6 +2711,52 @@ export default function AdminPage() {
         .cursor-pointer { cursor: pointer; }
         .ml-auto { margin-left: auto; }
 
+        /* Mobile Quick Tabs Bar */
+        .mobile-admin-tabs-bar {
+          display: none;
+          padding: 8px 12px;
+          gap: 6px;
+          overflow-x: auto;
+          background: rgba(8, 14, 30, 0.95);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          scrollbar-width: none;
+        }
+        .mobile-admin-tabs-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .mobile-tab-pill-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 12px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(209, 213, 219, 0.85);
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .mobile-tab-pill-btn.active {
+          background: #E11D48;
+          border-color: #E11D48;
+          color: #FFF;
+          box-shadow: 0 2px 10px rgba(225, 29, 72, 0.35);
+        }
+        .tab-chip-counter {
+          font-size: 10px;
+          font-weight: 800;
+          background: rgba(255, 255, 255, 0.15);
+          padding: 1px 5px;
+          border-radius: 999px;
+        }
+        .tab-chip-counter.highlight-amber {
+          background: #F59E0B;
+          color: #000;
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
           .admin-sidebar {
@@ -2692,8 +2768,8 @@ export default function AdminPage() {
           .admin-sidebar-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
             z-index: 140;
           }
           .admin-main-viewport {
@@ -2705,9 +2781,78 @@ export default function AdminPage() {
           .sidebar-close-mobile-btn {
             display: flex;
           }
+          .mobile-admin-tabs-bar {
+            display: flex;
+          }
+          .admin-topbar {
+            padding: 8px 12px;
+            height: 52px;
+          }
+          .topbar-breadcrumbs {
+            font-size: 13px;
+          }
+          .breadcrumb-root { display: none; }
+          .breadcrumb-sep { display: none; }
+          .admin-content-scroll {
+            padding: 14px 10px;
+          }
+
+          /* 2x2 Compact Metric Cards Grid on Mobile */
+          .metrics-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+          }
+          .metric-card {
+            padding: 12px 14px !important;
+            border-radius: 14px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+          }
+          .metric-icon-wrap {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+          }
+          .metric-icon-wrap svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+          .metric-label {
+            font-size: 11px !important;
+          }
+          .metric-number {
+            font-size: 20px !important;
+          }
+          .metric-unit {
+            font-size: 10.5px !important;
+          }
+          .metric-sub-hint {
+            display: none !important;
+          }
+
           .overview-split-layout {
             grid-template-columns: 1fr;
+            gap: 14px;
           }
+          .admin-surface-card {
+            padding: 16px 12px;
+            border-radius: 16px;
+          }
+          .quick-mod-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .quick-mod-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+          }
+          .btn-quick-approve, .btn-quick-reject {
+            justify-content: center;
+          }
+
           .hidden-mobile-btn {
             display: none;
           }
