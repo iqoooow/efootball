@@ -1085,14 +1085,16 @@ export default function AdminPage() {
           {activeTab === "moderation" && (
             <div className="tab-pane animate-fade-in">
               <div className="pane-header-row">
-                <div>
-                  <h2 className="pane-main-title">E&apos;lonlar Moderatsiyasi</h2>
+                <div className="pane-title-group">
+                  <div className="pane-heading-flex">
+                    <h2 className="pane-main-title">E&apos;lonlar Moderatsiyasi</h2>
+                    <span className="pane-counter-badge">
+                      {pendingListings.length} ta kutilmoqda
+                    </span>
+                  </div>
                   <p className="pane-sub-desc">
-                    Sotuvchilar tomonidan yuklangan va tasdiqlashni kutayotgan barcha hisoblar
+                    Sotuvchilar tomonidan yuklangan va tasdiqlashni kutayotgan hisoblar
                   </p>
-                </div>
-                <div className="pane-counter-badge">
-                  {pendingListings.length} ta kutayotgan ariza
                 </div>
               </div>
 
@@ -2384,35 +2386,51 @@ export default function AdminPage() {
         /* Pane Header & Badges */
         .pane-header-row {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: space-between;
-          gap: 16px;
+          gap: 12px;
+          margin-bottom: 4px;
+        }
+        .pane-title-group {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .pane-heading-flex {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
         }
         .pane-main-title {
           font-family: 'Outfit', sans-serif;
           font-size: 20px;
           font-weight: 800;
           color: #FFF;
-          margin: 0 0 4px 0;
+          margin: 0;
         }
         .pane-sub-desc {
           font-size: 13px;
           color: rgba(156, 163, 175, 0.85);
           margin: 0;
+          line-height: 1.4;
         }
         .pane-counter-badge {
-          background: rgba(245, 158, 11, 0.12);
-          border: 1px solid rgba(245, 158, 11, 0.25);
+          background: rgba(245, 158, 11, 0.14);
+          border: 1px solid rgba(245, 158, 11, 0.3);
           color: #FBBF24;
-          font-size: 12.5px;
+          font-size: 11.5px;
           font-weight: 700;
-          padding: 6px 14px;
+          padding: 3px 10px;
           border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          white-space: nowrap;
         }
 
         .admin-empty-pane {
           text-align: center;
-          padding: 48px 24px;
+          padding: 36px 20px;
           background: rgba(10, 17, 36, 0.85);
           backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2426,13 +2444,13 @@ export default function AdminPage() {
         }
         .empty-pane-title {
           font-family: 'Outfit', sans-serif;
-          font-size: 18px;
+          font-size: 17px;
           font-weight: 800;
           color: #FFF;
           margin: 0;
         }
         .empty-pane-desc {
-          font-size: 13.5px;
+          font-size: 13px;
           color: rgba(156, 163, 175, 0.85);
           margin: 0;
           max-width: 420px;
