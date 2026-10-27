@@ -63,7 +63,7 @@ async function _fetchListings(filters: GetListingsFilter = {}): Promise<{ listin
 
       if (sellerIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, seller_status')
           .in('id', sellerIds)
         if (profiles) {
@@ -112,7 +112,7 @@ async function _fetchListingById(id: string): Promise<Listing | null> {
       let seller = null
       if (listingData.seller_id) {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, seller_status, telegram_username, created_at')
           .eq('id', listingData.seller_id)
           .single()
@@ -142,7 +142,7 @@ export async function fetchStats() {
     const supabase = getPublicSupabase()
     const [listingsRes, sellersRes, ordersRes] = await Promise.all([
       supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'seller'),
+      supabase.from('public_profiles').select('id', { count: 'exact', head: true }).eq('role', 'seller'),
       supabase.from('orders').select('id', { count: 'exact', head: true }),
     ])
 

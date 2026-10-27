@@ -12,6 +12,13 @@ export function formatPrice(price: number, currency = 'USD') {
   }).format(price)
 }
 
+export function formatUzPrice(price: number) {
+  const rounded = Math.round(price)
+  const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  return `${formatted} so'm`
+}
+
+
 export function formatDate(date: string) {
   return new Intl.DateTimeFormat('uz-UZ', {
     year: 'numeric',
@@ -29,6 +36,11 @@ export function getPlatformLabel(platform: string) {
     all: 'Android & iOS',
   }
   return labels[platform] || 'Android / iOS'
+}
+
+// Buyurtma UUID'sidan qisqa, o'qiladigan raqam: EF-1A2B3C4D
+export function formatOrderNumber(orderId: string) {
+  return `EF-${orderId.replace(/-/g, '').slice(0, 8).toUpperCase()}`
 }
 
 export function getOrderStatusLabel(status: string) {

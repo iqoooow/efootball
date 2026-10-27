@@ -35,7 +35,10 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      router.push("/"); router.refresh();
+      // ?next= faqat sayt ichidagi yo'l bo'lsa (open redirect'ga yo'l qo'ymaslik uchun)
+      const next = new URLSearchParams(window.location.search).get("next");
+      const target = next && /^\/(?![\/\\])/.test(next) ? next : "/";
+      router.push(target); router.refresh();
     } catch { setError("Ulanishda xatolik yuz berdi."); setLoading(false); }
   };
 

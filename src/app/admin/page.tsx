@@ -49,9 +49,16 @@ import { getPlatformLabel, formatDate } from "@/lib/utils";
 
 type AdminTab = "overview" | "moderation" | "users" | "listings" | "orders";
 
-// Master Credentials
-const ADMIN_LOGIN_USER = "admin";
-const ADMIN_LOGIN_PASS = "admin123";
+// Admin ruxsati faqat Supabase sessiyasi + profiles.role === "admin" orqali beriladi.
+// Ma'lumotlar himoyasi RLS (public.is_admin()) da; bu tekshiruv faqat UI uchun.
+async function hasAdminRole(sb: ReturnType<typeof createClient>, userId: string) {
+  const { data: prof } = await sb
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return prof?.role === "admin";
+}
 
 export default function AdminPage() {
   const sbRef = useRef<any>(null);
@@ -130,18 +137,6 @@ export default function AdminPage() {
   // Initial Auth Check
   useEffect(() => {
     const checkSecurity = async () => {
-      const savedAuth = sessionStorage.getItem("efzone_admin_session");
-      if (savedAuth === "true") {
-        setIsAuthenticated(true);
-        if (isSupabaseConfigured) {
-          const sb = createClient();
-          sbRef.current = sb;
-          await fetchAllData(sb);
-        }
-        setAuthLoading(false);
-        return;
-      }
-
       if (isSupabaseConfigured) {
         try {
           const sb = createClient();
@@ -149,19 +144,11 @@ export default function AdminPage() {
           const {
             data: { user },
           } = await sb.auth.getUser();
-          if (user) {
-            const { data: prof } = await sb
-              .from("profiles")
-              .select("role")
-              .eq("id", user.id)
-              .single();
-            if (prof?.role === "admin") {
-              setIsAuthenticated(true);
-              sessionStorage.setItem("efzone_admin_session", "true");
-              await fetchAllData(sb);
-              setAuthLoading(false);
-              return;
-            }
+          if (user && (await hasAdminRole(sb, user.id))) {
+            setIsAuthenticated(true);
+            await fetchAllData(sb);
+            setAuthLoading(false);
+            return;
           }
         } catch {}
       }
@@ -179,54 +166,44 @@ export default function AdminPage() {
     setLoginError("");
     setLoggingIn(true);
 
-    const u = usernameInput.trim();
-    const p = passwordInput.trim();
+    const email = usernameInput.trim();
+    const password = passwordInput;
 
-    if (u === ADMIN_LOGIN_USER && p === ADMIN_LOGIN_PASS) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem("efzone_admin_session", "true");
-      if (isSupabaseConfigured) {
-        const sb = createClient();
-        sbRef.current = sb;
-        await fetchAllData(sb);
-      }
+    if (!isSupabaseConfigured) {
+      setLoginError("Supabase sozlanmagan. Admin kirishi mumkin emas.");
       setLoggingIn(false);
       return;
     }
 
-    // Try Supabase auth if username looks like email
-    if (isSupabaseConfigured && u.includes("@")) {
-      try {
-        const sb = createClient();
-        const { data, error } = await sb.auth.signInWithPassword({
-          email: u,
-          password: p,
-        });
-        if (!error && data.user) {
-          const { data: prof } = await sb
-            .from("profiles")
-            .select("role")
-            .eq("id", data.user.id)
-            .single();
-          if (prof?.role === "admin") {
-            setIsAuthenticated(true);
-            sessionStorage.setItem("efzone_admin_session", "true");
-            sbRef.current = sb;
-            await fetchAllData(sb);
-            setLoggingIn(false);
-            return;
-          }
-        }
-      } catch {}
-    }
+    try {
+      const sb = createClient();
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        setLoginError("Email yoki parol noto'g'ri.");
+        setLoggingIn(false);
+        return;
+      }
 
-    setLoginError("Login yoki parol noto'g'ri. Ruxsat berilmadi.");
+      if (await hasAdminRole(sb, data.user.id)) {
+        sbRef.current = sb;
+        setIsAuthenticated(true);
+        await fetchAllData(sb);
+        setLoggingIn(false);
+        return;
+      }
+
+      setLoginError("Bu akkauntda admin huquqi yo'q. Ruxsat berilmadi.");
+    } catch {
+      setLoginError("Tizimga kirishda xatolik yuz berdi.");
+    }
     setLoggingIn(false);
   };
 
   // Handle Admin Logout
-  const handleAdminLogout = () => {
-    sessionStorage.removeItem("efzone_admin_session");
+  const handleAdminLogout = async () => {
+    try {
+      await sbRef.current?.auth.signOut();
+    } catch {}
     setIsAuthenticated(false);
     setUsernameInput("");
     setPasswordInput("");
@@ -400,13 +377,13 @@ export default function AdminPage() {
 
           <form onSubmit={handleLoginSubmit} className="admin-login-form">
             <div className="form-group">
-              <label className="form-label">Admin Login</label>
+              <label className="form-label">Admin Email</label>
               <input
-                type="text"
+                type="email"
                 required
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="admin"
+                placeholder="admin@efzone.uz"
                 className="admin-input"
                 autoComplete="username"
               />
@@ -442,9 +419,6 @@ export default function AdminPage() {
             </button>
           </form>
 
-          <div className="login-footer-hint">
-            <span>Standart kirish: <strong>admin</strong> / <strong>admin123</strong></span>
-          </div>
         </div>
 
         <style>{`
@@ -580,12 +554,6 @@ export default function AdminPage() {
             transform: translateY(-1px);
             box-shadow: 0 6px 24px rgba(225, 29, 72, 0.55);
           }
-          .login-footer-hint {
-            margin-top: 20px;
-            font-size: 12px;
-            color: rgba(156, 163, 175, 0.7);
-          }
-          .login-footer-hint strong { color: #FFF; }
           .text-rose { color: #FB7185; }
         `}</style>
       </div>

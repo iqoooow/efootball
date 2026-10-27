@@ -21,6 +21,7 @@ import {
   Gamepad2,
 } from "lucide-react";
 import type { Listing, Order } from "@/lib/types";
+import { formatOrderNumber, getOrderStatusLabel } from "@/lib/utils";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -40,19 +41,6 @@ export default function ProfilePage() {
         } = await supabase.auth.getUser();
 
         if (!currentUser) {
-          // Check if admin session is active
-          if (typeof window !== "undefined" && sessionStorage.getItem("efzone_admin_session") === "true") {
-            setProfile({
-              id: "admin-1",
-              role: "admin",
-              full_name: "Platforma Admini",
-              email: "admin@efzone.uz",
-              seller_status: "approved",
-            });
-            setUser({ email: "admin@efzone.uz", id: "admin-1", created_at: new Date().toISOString() });
-            setLoading(false);
-            return;
-          }
           window.location.href = "/auth/login";
           return;
         }
@@ -68,7 +56,7 @@ export default function ProfilePage() {
         setProfile(
           userProfile || {
             id: currentUser.id,
-            role: currentUser.user_metadata?.role || "buyer",
+            role: "buyer",
             full_name: currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0],
             seller_status: null,
           }
@@ -109,9 +97,6 @@ export default function ProfilePage() {
     const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem("efzone_admin_session");
-    }
     window.location.href = "/";
   };
 
@@ -232,6 +217,55 @@ export default function ProfilePage() {
               <span>Admin Panelga O&apos;tish</span>
               <ArrowRight size={15} />
             </Link>
+          </div>
+        )}
+
+        {/* Purchases / Xaridlarim Section */}
+        {userOrders.length > 0 && (
+          <div className="profile-section-card">
+            <div className="section-header">
+              <h2 className="section-title">Mening Xaridlarim</h2>
+              <span className="section-subtitle">
+                Escrow orqali sotib olingan akkauntlar — savdo xonasiga qaytish uchun bosing
+              </span>
+            </div>
+
+            <div className="listings-status-list">
+              {userOrders.map((o) => (
+                <Link
+                  key={o.id}
+                  href={`/orders/${o.id}`}
+                  className="listing-status-card"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className="listing-info">
+                    <div className="listing-title-row">
+                      <span className="item-title">{o.listing?.title || "eFootball Akkaunt"}</span>
+                      <span className="item-price">${o.price}</span>
+                    </div>
+                    <div className="listing-meta-row">
+                      <span className="meta-tag">{formatOrderNumber(o.id)}</span>
+                      <span className="meta-date">
+                        {new Date(o.created_at).toLocaleDateString("uz-UZ")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="listing-badge-col">
+                    <span
+                      className={`status-pill ${
+                        o.status === "completed"
+                          ? "pill-active"
+                          : o.status === "disputed" || o.status === "refunded"
+                          ? "pill-rejected"
+                          : "pill-pending"
+                      }`}
+                    >
+                      {getOrderStatusLabel(o.status)}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { isSupabaseConfigured, createClient } from "@/lib/supabase/client";
 import type { Listing, Order, Profile } from "@/lib/types";
-import { getPlatformLabel, formatDate } from "@/lib/utils";
+import { getPlatformLabel, formatDate, formatOrderNumber } from "@/lib/utils";
 import { ImageUploader } from "@/components/listings/ImageUploader";
 
 type SellerTab = "listings" | "orders" | "earnings";
@@ -122,7 +122,7 @@ export default function SellerDashboardPage() {
           .order("created_at", { ascending: false }),
         sb
           .from("orders")
-          .select("*, listing:listings(title, type, price, platform), buyer:profiles(full_name, email, telegram_username)")
+          .select("*, listing:listings(title, type, price, platform), buyer:profiles!buyer_id(full_name, email, telegram_username)")
           .eq("seller_id", uid)
           .order("created_at", { ascending: false }),
       ]);
@@ -147,30 +147,7 @@ export default function SellerDashboardPage() {
           data: { user },
         } = await sb.auth.getUser();
 
-        // Check if admin demo session is active
         if (!user) {
-          if (
-            typeof window !== "undefined" &&
-            sessionStorage.getItem("efzone_admin_session") === "true"
-          ) {
-            const adminProf: Profile = {
-              id: "admin-1",
-              role: "admin",
-              full_name: "Platforma Me'mori (Admin)",
-              seller_status: "approved",
-              avatar_url: null,
-              telegram_username: "efzone_admin",
-              created_at: new Date().toISOString(),
-            };
-            setProfile(adminProf);
-            const { data: allListings } = await sb
-              .from("listings")
-              .select("*")
-              .order("created_at", { ascending: false });
-            if (allListings) setListings(allListings);
-            setLoading(false);
-            return;
-          }
           router.push("/auth/login");
           return;
         }
@@ -187,7 +164,7 @@ export default function SellerDashboardPage() {
         } else {
           setProfile({
             id: user.id,
-            role: user.user_metadata?.role || "buyer",
+            role: "buyer",
             full_name:
               user.user_metadata?.full_name || user.email?.split("@")[0],
             seller_status: null,
@@ -993,7 +970,7 @@ export default function SellerDashboardPage() {
                         {orders.map((o) => (
                           <tr key={o.id}>
                             <td>
-                              <span className="order-mono-id">#{o.id.slice(0, 8)}</span>
+                              <Link href={`/orders/${o.id}`} className="order-mono-id">{formatOrderNumber(o.id)}</Link>
                             </td>
                             <td>
                               <span className="order-title-td">{o.listing?.title || "eFootball Hisob"}</span>

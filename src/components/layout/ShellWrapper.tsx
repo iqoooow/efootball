@@ -5,7 +5,7 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { SupportWidget } from './SupportWidget';
 
-const AUTH_PATHS = ['/auth/', '/admin'];
+const AUTH_PATHS = ['/auth/', '/admin', '/orders/'];
 
 export function ShellWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

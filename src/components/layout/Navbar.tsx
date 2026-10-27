@@ -20,6 +20,7 @@ import {
   ArrowRight,
   BadgeCheck,
 } from "lucide-react";
+
 import { Logo } from "./Logo";
 
 export function Navbar() {
@@ -31,18 +32,11 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [isAdminSession, setIsAdminSession] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check local admin session
-    if (typeof window !== "undefined") {
-      const savedAdmin = sessionStorage.getItem("efzone_admin_session") === "true";
-      setIsAdminSession(savedAdmin);
-    }
-
     async function loadAuth() {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -67,7 +61,7 @@ export function Navbar() {
             // Default buyer profile fallback
             setProfile({
               id: currentUser.id,
-              role: currentUser.user_metadata?.role || "buyer",
+              role: "buyer",
               full_name: currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0],
               seller_status: null,
             });
@@ -90,7 +84,7 @@ export function Navbar() {
             setProfile(
               updatedProfile || {
                 id: updatedUser.id,
-                role: updatedUser.user_metadata?.role || "buyer",
+                role: "buyer",
                 full_name: updatedUser.user_metadata?.full_name || updatedUser.email?.split("@")[0],
                 seller_status: null,
               }
@@ -126,12 +120,8 @@ export function Navbar() {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       await supabase.auth.signOut();
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("efzone_admin_session");
-      }
       setUser(null);
       setProfile(null);
-      setIsAdminSession(false);
       setUserDropdownOpen(false);
       window.location.href = "/";
     } catch (err) {
@@ -139,7 +129,7 @@ export function Navbar() {
     }
   };
 
-  const isSuperAdmin = profile?.role === "admin" || isAdminSession;
+  const isSuperAdmin = profile?.role === "admin";
   const isSeller = !isSuperAdmin && (profile?.role === "seller" || profile?.seller_status === "approved");
   const isBuyer = !isSuperAdmin && !isSeller;
 
@@ -225,6 +215,7 @@ export function Navbar() {
                 <span>Turnirlar</span>
                 <span className="badge-coming-soon">Tez kunda</span>
               </div>
+
             </nav>
 
             {/* User Auth Action Group */}
@@ -436,6 +427,7 @@ export function Navbar() {
             <span>Turnirlar</span>
             <span className="badge-coming-soon">Tez kunda</span>
           </div>
+
 
           <div className="drawer-divider" />
 
